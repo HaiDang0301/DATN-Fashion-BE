@@ -1,4 +1,5 @@
+const CollectionRouter = require("./collections");
 function route(app) {
-  app.use("/", "Hello Word");
+  app.use("/", CollectionRouter);
 }
 module.exports = route;
