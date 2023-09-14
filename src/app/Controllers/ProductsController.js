@@ -11,6 +11,10 @@ class ProductsController {
   async index(req, res, next) {
     let cateria = {};
     let bysort = {};
+    const page = req.query.page;
+    const limit = 1;
+    const countProducts = await Product.countDocuments();
+    const totalPage = Math.ceil(countProducts / limit);
     const collections = req.params.collections;
     const brand = req.query.brand;
     const color = req.query.color;
@@ -41,16 +45,26 @@ class ProductsController {
       cateria = {
         collections: req.query.collections,
       };
+      const products = await Product.find(cateria);
+      res.json(products);
     }
     if (sort) {
       bysort = { [`${sort}`]: -1 };
     } else {
       bysort = { createdAt: -1 };
     }
+    if (page > totalPage) {
+      res.status(404).json("Can't Not Find Page");
+    }
     try {
-      const products = await Product.find(cateria).sort(bysort);
-      res.json(products);
-    } catch (error) {}
+      const products = await Product.find(cateria)
+        .sort(bysort)
+        .skip((page - 1) * limit)
+        .limit(limit);
+      res.status(200).json(products);
+    } catch (error) {
+      res.status(500).json("Connect Server False");
+    }
   }
   async show(req, res, next) {
     const slug = req.params.slug;
