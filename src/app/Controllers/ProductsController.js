@@ -9,16 +9,48 @@ cloudinary.config({
 });
 class ProductsController {
   async index(req, res, next) {
-    try {
-      const collections = req.params.collections;
-      const query = req.query.name;
-      if (collections) {
-        const products = await Product.find({ collections: collections });
-        res.status(200).json(products);
-      }
-    } catch (error) {
-      res.status(500).json("Connect Server False");
+    let cateria = {};
+    let bysort = {};
+    const collections = req.params.collections;
+    const brand = req.query.brand;
+    const color = req.query.color;
+    const price = req.query.price;
+    const size = req.query.size;
+    const sort = req.query.sort;
+    if (brand) {
+      cateria = {
+        $and: [{ collections: collections }, { brand: req.query.brand }],
+      };
     }
+    if (color) {
+      cateria = {
+        $and: [{ collections: collections }, { color: req.query.color }],
+      };
+    }
+    if (price) {
+      cateria = {
+        $and: [{ collections: collections }, { price: req.query.price }],
+      };
+    }
+    if (size) {
+      cateria = {
+        $and: [{ collections: collections }, { size: req.query.size }],
+      };
+    }
+    if (!collections) {
+      cateria = {
+        collections: req.query.collections,
+      };
+    }
+    if (sort) {
+      bysort = { [`${sort}`]: -1 };
+    } else {
+      bysort = { createdAt: -1 };
+    }
+    try {
+      const products = await Product.find(cateria).sort(bysort);
+      res.json(products);
+    } catch (error) {}
   }
   async show(req, res, next) {
     const slug = req.params.slug;
@@ -50,7 +82,7 @@ class ProductsController {
           color: req.body.color,
           size: req.body.size,
           importPrice: req.body.importPrice,
-          saleProduct: req.body.saleProduct,
+          price: req.body.price,
           brand: req.body.brand,
           description: req.body.description,
         });
@@ -67,7 +99,7 @@ class ProductsController {
           color: req.body.color,
           size: req.body.size,
           importPrice: req.body.importPrice,
-          saleProduct: req.body.saleProduct,
+          price: req.body.price,
           brand: req.body.brand,
           description: req.body.description,
         });
@@ -95,7 +127,7 @@ class ProductsController {
             color: req.body.color,
             size: req.body.size,
             importPrice: req.body.importPrice,
-            saleProduct: req.body.price,
+            price: req.body.price,
             brand: req.body.brand,
             description: req.body.description,
           }

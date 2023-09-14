@@ -13,7 +13,7 @@ const Product = new Schema(
     color: { type: String, required: true },
     size: { type: String, required: true },
     importPrice: { type: String, required: true },
-    saleProduct: { type: String, required: true },
+    price: { type: String, required: true },
     promotion: { type: String, default: 0 },
     brand: { type: String, required: true },
     description: { type: String, required: true },
