@@ -8,10 +8,24 @@ cloudinary.config({
   api_secret: process.env.api_secret,
 });
 class ProductsController {
+  async index(req, res, next) {
+    try {
+      const collections = req.params.collections;
+      const query = req.query.name;
+      if (collections) {
+        const products = await Product.find({ collections: collections });
+        res.status(200).json(products);
+      }
+    } catch (error) {
+      res.status(500).json("Connect Server False");
+    }
+  }
   async show(req, res, next) {
-    const categories = req.body.categories;
-    const product = await Product.find({ category: categories });
-    res.send(product);
+    const slug = req.params.slug;
+    const productDetails = await Product.find({
+      slug: slug,
+    });
+    res.status(200).json(productDetails);
   }
   async store(req, res, next) {
     const name = await Product.findOne({ name: req.body.name });
