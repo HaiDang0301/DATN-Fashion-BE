@@ -122,9 +122,19 @@ class ProductsController {
       }
     }
   }
+  async edit(req, res, next) {
+    const products = await Product.findById({ _id: req.params.id });
+    try {
+      if (products) {
+        res.status(200).json(products);
+      }
+    } catch (error) {
+      res.status(500).json("Can't Find Products");
+    }
+    res.json(products);
+  }
   async update(req, res, next) {
     const id = req.params.id;
-    const findId = await Product.findById({ _id: id });
     try {
       if (findId) {
         const product = await Product.findByIdAndUpdate(
