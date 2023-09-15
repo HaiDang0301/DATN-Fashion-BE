@@ -61,7 +61,7 @@ class ProductsController {
         .sort(bysort)
         .skip((page - 1) * limit)
         .limit(limit);
-      res.status(200).json(products);
+      res.status(200).json({ products, totalPage });
     } catch (error) {
       res.status(500).json("Connect Server False");
     }
@@ -75,51 +75,57 @@ class ProductsController {
   }
   async store(req, res, next) {
     const name = await Product.findOne({ name: req.body.name });
-    if (name) {
-      res.status(500).json("Products Already Exist");
+    // if (name) {
+    //   res.status(500).json("Products Already Exist");
+    // } else {
+    const productCode = req.body.productCode;
+    let randomCode = (Math.random() + 1)
+      .toString(36)
+      .slice(2, 7)
+      .toLocaleUpperCase();
+    const fileUpload = req.files.image;
+    const urls = [];
+    for (const files of fileUpload) {
+      const file = files;
+      const result = await cloudinary.uploader.upload(file.tempFilePath, {
+        folder: "products",
+      });
+      urls.push({ url: result.url, id: result.public_id });
+    }
+    if (productCode === "") {
+      const product = await new Product({
+        image: urls,
+        name: req.body.name,
+        quantity: req.body.quantity,
+        productCode: randomCode,
+        collections: req.body.collections,
+        category: req.body.category,
+        color: req.body.color,
+        size: req.body.size,
+        importPrice: req.body.importPrice,
+        price: req.body.price,
+        brand: req.body.brand,
+        description: req.body.description,
+      });
+      await product.save();
+      res.status(200).json("Add product success");
     } else {
-      const productCode = req.body.productCode;
-      let randomCode = (Math.random() + 1)
-        .toString(36)
-        .slice(2, 7)
-        .toLocaleUpperCase();
-      const fileUpload = req.files.image;
-      const result = await cloudinary.uploader.upload(fileUpload.tempFilePath);
-      if (productCode === "") {
-        const product = await new Product({
-          image: result.url,
-          name: req.body.name,
-          quantity: req.body.quantity,
-          productCode: randomCode,
-          collections: req.body.collections,
-          category: req.body.category,
-          color: req.body.color,
-          size: req.body.size,
-          importPrice: req.body.importPrice,
-          price: req.body.price,
-          brand: req.body.brand,
-          description: req.body.description,
-        });
-        await product.save();
-        res.status(200).json("Add product success");
-      } else {
-        const product = await new Product({
-          image: result.url,
-          name: req.body.name,
-          quantity: req.body.quantity,
-          productCode: productCode,
-          collections: req.body.collections,
-          category: req.body.category,
-          color: req.body.color,
-          size: req.body.size,
-          importPrice: req.body.importPrice,
-          price: req.body.price,
-          brand: req.body.brand,
-          description: req.body.description,
-        });
-        await product.save();
-        res.status(200).json("Add product success");
-      }
+      const product = await new Product({
+        image: urls,
+        name: req.body.name,
+        quantity: req.body.quantity,
+        productCode: productCode,
+        collections: req.body.collections,
+        category: req.body.category,
+        color: req.body.color,
+        size: req.body.size,
+        importPrice: req.body.importPrice,
+        price: req.body.price,
+        brand: req.body.brand,
+        description: req.body.description,
+      });
+      await product.save();
+      res.status(200).json("Add product success");
     }
   }
   async edit(req, res, next) {
