@@ -7,7 +7,7 @@ const Product = new Schema(
     image: [
       {
         url: { type: String, required: true },
-        id: { type: String, required: true },
+        public_id: { type: String, required: true },
       },
     ],
     name: { type: String, required: true, unique: true },
@@ -24,17 +24,6 @@ const Product = new Schema(
     description: { type: String, required: true },
     slug: { type: String, slug: "name" },
     status: { type: String, default: "Stocking" },
-    comment: [
-      {
-        _id: { type: String },
-        body: { type: String },
-      },
-    ],
-    startrate: [
-      {
-        rate: { type: String },
-      },
-    ],
   },
   { timestamps: true }
 );

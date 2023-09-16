@@ -1,4 +1,4 @@
-const Product = require("../Models/ProductsModel");
+const Products = require("../Models/ProductsModel");
 const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
 dotenv.config();
@@ -13,7 +13,7 @@ class ProductsController {
     let bysort = {};
     const page = req.query.page;
     const limit = 1;
-    const countProducts = await Product.countDocuments();
+    const countProducts = await Products.countDocuments();
     const totalPage = Math.ceil(countProducts / limit);
     const collections = req.params.collections;
     const brand = req.query.brand;
@@ -45,8 +45,6 @@ class ProductsController {
       cateria = {
         collections: req.query.collections,
       };
-      const products = await Product.find(cateria);
-      res.json(products);
     }
     if (sort) {
       bysort = { [`${sort}`]: -1 };
@@ -57,7 +55,7 @@ class ProductsController {
       res.status(404).json("Can't Not Find Page");
     }
     try {
-      const products = await Product.find(cateria)
+      const products = await Products.find(cateria)
         .sort(bysort)
         .skip((page - 1) * limit)
         .limit(limit);
@@ -68,68 +66,79 @@ class ProductsController {
   }
   async show(req, res, next) {
     const slug = req.params.slug;
-    const productDetails = await Product.find({
+    const productDetails = await Products.find({
       slug: slug,
     });
     res.status(200).json(productDetails);
   }
   async store(req, res, next) {
-    const name = await Product.findOne({ name: req.body.name });
-    // if (name) {
-    //   res.status(500).json("Products Already Exist");
-    // } else {
-    const productCode = req.body.productCode;
-    let randomCode = (Math.random() + 1)
-      .toString(36)
-      .slice(2, 7)
-      .toLocaleUpperCase();
-    const fileUpload = req.files.image;
-    const urls = [];
-    for (const files of fileUpload) {
-      const file = files;
-      const result = await cloudinary.uploader.upload(file.tempFilePath, {
-        folder: "products",
-      });
-      urls.push({ url: result.url, id: result.public_id });
-    }
-    if (productCode === "") {
-      const product = await new Product({
-        image: urls,
-        name: req.body.name,
-        quantity: req.body.quantity,
-        productCode: randomCode,
-        collections: req.body.collections,
-        category: req.body.category,
-        color: req.body.color,
-        size: req.body.size,
-        importPrice: req.body.importPrice,
-        price: req.body.price,
-        brand: req.body.brand,
-        description: req.body.description,
-      });
-      await product.save();
-      res.status(200).json("Add product success");
+    const name = await Products.findOne({ name: req.body.name });
+    if (name) {
+      res.status(500).json("Products Already Exist");
     } else {
-      const product = await new Product({
-        image: urls,
-        name: req.body.name,
-        quantity: req.body.quantity,
-        productCode: productCode,
-        collections: req.body.collections,
-        category: req.body.category,
-        color: req.body.color,
-        size: req.body.size,
-        importPrice: req.body.importPrice,
-        price: req.body.price,
-        brand: req.body.brand,
-        description: req.body.description,
-      });
-      await product.save();
-      res.status(200).json("Add product success");
+      const productCode = req.body.productCode;
+      const fileUpload = req.files.image;
+      const urls = [];
+      if (fileUpload.length > 1) {
+        for (const files of fileUpload) {
+          const file = files;
+          const result = await cloudinary.uploader.upload(file.tempFilePath, {
+            folder: "products",
+          });
+          urls.push({ url: result.url, public_id: result.public_id });
+        }
+      } else {
+        const result = await cloudinary.uploader.upload(
+          fileUpload.tempFilePath,
+          {
+            folder: "products",
+          }
+        );
+        urls.push({ url: result.url, public_id: result.public_id });
+      }
+      if (!productCode) {
+        let randomCode = (Math.random() + 1)
+          .toString(36)
+          .slice(2, 7)
+          .toLocaleUpperCase();
+        const product = await new Products({
+          image: urls,
+          name: req.body.name,
+          quantity: req.body.quantity,
+          productCode: randomCode,
+          collections: req.body.collections,
+          category: req.body.category,
+          color: req.body.color,
+          size: req.body.size,
+          importPrice: req.body.importPrice,
+          price: req.body.price,
+          brand: req.body.brand,
+          description: req.body.description,
+        });
+        await product.save();
+        res.status(200).json("Add product success");
+      } else {
+        const product = await new Products({
+          image: urls,
+          name: req.body.name,
+          quantity: req.body.quantity,
+          productCode: productCode,
+          collections: req.body.collections,
+          category: req.body.category,
+          color: req.body.color,
+          size: req.body.size,
+          importPrice: req.body.importPrice,
+          price: req.body.price,
+          brand: req.body.brand,
+          description: req.body.description,
+        });
+        await product.save();
+        res.status(200).json("Add product success");
+      }
     }
   }
   async edit(req, res, next) {
-    const products = await Product.findById({ _id: req.params.id });
+    const products = await Products.findById({ _id: req.params.id });
     try {
       if (products) {
         res.status(200).json(products);
@@ -140,28 +149,31 @@ class ProductsController {
     res.json(products);
   }
   async update(req, res, next) {
-    const id = req.params.id;
+    const findId = req.params.id;
     try {
       if (findId) {
-        const product = await Product.findByIdAndUpdate(
-          {
-            _id: id,
-          },
-          {
-            image: req.body.image,
-            name: req.body.name,
-            quantity: req.body.quantity,
-            productCode: req.body.productCode,
-            unit: req.body.unit,
-            category: req.body.category,
-            color: req.body.color,
-            size: req.body.size,
-            importPrice: req.body.importPrice,
-            price: req.body.price,
-            brand: req.body.brand,
-            description: req.body.description,
-          }
-        );
+        const id = await Products.find({ _id: findId });
+        id.map(async (item, index) => {
+          const product = await Products.findByIdAndUpdate(
+            {
+              _id: req.params.id,
+            },
+            {
+              image: item.image,
+              name: req.body.name,
+              quantity: req.body.quantity,
+              productCode: item.productCode,
+              collections: req.body.collections,
+              category: req.body.category,
+              color: req.body.color,
+              size: req.body.size,
+              importPrice: req.body.importPrice,
+              price: req.body.price,
+              brand: req.body.brand,
+              description: req.body.description,
+            }
+          );
+        });
         res.status(200).json("Update Success");
       } else {
         res.status(400).json("Can not find ID");
@@ -172,10 +184,10 @@ class ProductsController {
   }
   async destroy(req, res, next) {
     const id = req.params.id;
-    const findId = await Product.findById({ _id: id });
+    const findId = await Products.findById({ _id: id });
     try {
       if (findId) {
-        const product = await Product.findByIdAndDelete({
+        const product = await Products.findByIdAndDelete({
           _id: id,
         });
         res.status(200).json("Delete Success");

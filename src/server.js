@@ -1,5 +1,4 @@
 const express = require("express");
-const fileUpload = require("express-fileupload");
 const db = require("./config/db");
 const fileUpload = require("express-fileupload");
 const router = require("./routes/index");
@@ -14,11 +13,6 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(
-  fileUpload({
-    useTempFiles: true,
-  })
-);
 router(app);
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
