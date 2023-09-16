@@ -1,5 +1,10 @@
-const blogs = require("../app/Controllers/BlogsController");
 const express = require("express");
+const blogs = require("../app/Controllers/BlogsController");
 const router = express.Router();
 router.get("/blogs", blogs.index);
+router.get("/blogs/:slug/details", blogs.show);
+router.post("/blogs", blogs.store);
+router.get("/blogs/:id/edit", blogs.edit);
+router.put("/blogs/:id", blogs.update);
+router.delete("/blogs/:id", blogs.destroy);
 module.exports = router;
