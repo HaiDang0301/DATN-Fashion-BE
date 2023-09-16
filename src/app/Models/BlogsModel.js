@@ -5,6 +5,7 @@ mongoose.plugin(slug);
 const Blogs = new Schema({
   image: { type: String, required: true },
   title: { type: String, required: true },
+  public_id: { type: String, required: true },
   author: { type: String, required: true },
   description: { type: String, required: true },
   slug: { type: String, slug: "title" },
