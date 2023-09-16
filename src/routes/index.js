@@ -1,7 +1,7 @@
 const CollectionRouter = require("./collections");
-const BlogRouter = require("./blogs");
+const BlogsRouter = require("./blogs");
 function route(app) {
   app.use("/", CollectionRouter);
-  app.use("/", BlogRouter);
+  app.use("/", BlogsRouter);
 }
 module.exports = route;
