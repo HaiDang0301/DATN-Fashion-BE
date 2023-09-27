@@ -1,0 +1,10 @@
+const express = require("express");
+const blogs = require("../../app/Controllers/Admin/BlogsController");
+const Middleware = require("../../middleware/Middleware");
+const router = express.Router();
+router.get("/api/admin/blogs", Middleware.Admin, blogs.index);
+router.post("/api/admin/blogs", Middleware.Admin, blogs.store);
+router.get("/api/admin/blogs/:id/edit", Middleware.Admin, blogs.edit);
+router.put("/api/admin/blogs/:id", Middleware.Admin, blogs.update);
+router.delete("/api/admin/blogs/:id", Middleware.Admin, blogs.destroy);
+module.exports = router;
