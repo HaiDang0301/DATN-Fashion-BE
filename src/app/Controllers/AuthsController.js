@@ -104,7 +104,7 @@ class AccountsController {
           from: process.env.Email_User,
           to: req.body.email,
           subject: "Notice: Reset Password",
-          html: `<p>You have just requested to reset the password. Please <a href ="${process.env.http_FE}/reset-password/${token}">click here</a></p>`,
+          html: `<p>You have just requested to reset the password. Please <a href ="${process.env.Reset_PassWord}/${token}">click here</a></p>`,
         };
         transporter.sendMail(mailOptions, async (error, info) => {
           if (error) {
