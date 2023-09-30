@@ -30,7 +30,7 @@ class AccountsController {
           from: process.env.Email_User,
           to: req.body.email,
           subject: "Notice: Registration Of Fashion Shop Account",
-          html: "<p>You have successfully registered the account</p>",
+          html: `<p>You have successfully registered the account.Please <a href ="${process.env.HTTP_Login}">click here</a> to login</p>`,
           text: "click",
         };
         transporter.sendMail(mailOptions, async (error, info) => {
@@ -57,11 +57,11 @@ class AccountsController {
     try {
       const email = await Accounts.findOne({ email: req.body.email });
       if (!email) {
-        return res.status(401).json("Inventive password account information");
+        return res.status(401).json("Wrong account or password information");
       }
       const password = await bcrypt.compare(req.body.password, email.password);
       if (!password) {
-        return res.status(401).json("Inventive password account information");
+        return res.status(401).json("Wrong account or password information");
       }
       if (email && password) {
         const token = await jwt.sign(
@@ -80,7 +80,7 @@ class AccountsController {
         return res.status(200).json({ others, token });
       }
     } catch (error) {
-      res.status(500).send("Không thể kết nối đến server");
+      res.status(500).send("Connect server false");
     }
   }
   async forget(req, res, next) {
@@ -104,7 +104,7 @@ class AccountsController {
           from: process.env.Email_User,
           to: req.body.email,
           subject: "Notice: Reset Password",
-          html: `<p>You have just requested to reset the password. Please <a href ="${process.env.Reset_PassWord}/${token}">click here</a></p>`,
+          html: `<p>You have just requested to reset the password. Please <a href ="${process.env.Reset_Password}/${token}">click here</a> to reset password</p>`,
         };
         transporter.sendMail(mailOptions, async (error, info) => {
           if (error) {

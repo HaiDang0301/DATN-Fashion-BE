@@ -97,7 +97,7 @@ class BlogsController {
                 description: req.body.description,
               }
             );
-            res.status(200).json("Update Success");
+            res.status(200).json("Update Blog Success");
           } else {
             const blogs = await Blogs.findByIdAndUpdate(
               { _id: id },

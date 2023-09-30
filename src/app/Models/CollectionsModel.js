@@ -7,7 +7,7 @@ const Collection = new Schema(
     collections: { type: String, required: true, unique: true },
     categories: [
       {
-        name: { type: String, required: true, unique: true },
+        name: { type: String, unique: true },
       },
     ],
   },
