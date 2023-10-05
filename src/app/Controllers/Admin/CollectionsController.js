@@ -1,37 +1,35 @@
-const Collection = require("../../Models/CollectionsModel");
+const Collections = require("../../Models/CollectionsModel");
 class CollectionController {
   async show(req, res, next) {
-    const collection = await Collection.find({});
-    res.json(collection);
+    const collections = await Collections.find({});
+    res.json(collections);
   }
   async store(req, res, next) {
     try {
-      const find = await Collection.findOne({
+      const find = await Collections.findOne({
         collections: req.body.collections,
       });
       if (!find) {
-        const collection = await new Collection({
+        const collection = new Collections({
           collections: req.body.collections,
-          categories: {
-            name: req.body.name,
-          },
+          category: req.body.category,
         });
         collection.save();
-        res.json(collection);
+        res.status(200).json("Add Collection Success");
       } else {
-        const collection = await Collection.findOneAndUpdate(
+        await Collections.findOneAndUpdate(
           {
             collections: req.body.collections,
           },
           {
             $push: {
               categories: {
-                name: req.body.name,
+                category: req.body.category,
               },
             },
           }
         );
-        res.json(collection);
+        res.status(200).json("Add Category Success");
       }
     } catch (error) {
       res.status(500).json("Connect Server False");
@@ -41,7 +39,7 @@ class CollectionController {
     const collection = req.body.collections;
     try {
       if (collection) {
-        const findCollection = await Collection.findOneAndUpdate(
+        const findCollection = await Collections.findOneAndUpdate(
           { _id: req.params.id },
           {
             collections: req.body.collections,
@@ -49,12 +47,12 @@ class CollectionController {
         );
         res.status(200).json("Update Collection Success");
       } else {
-        const category = await Collection.updateOne(
+        const category = await Collections.updateOne(
           {
             _id: req.params.id,
             "categories._id": req.body.idc,
           },
-          { $set: { "categories.$.name": req.body.name } }
+          { $set: { "categories.$.category": req.body.category } }
         );
         res.status(200).json("Update category success");
       }
@@ -66,12 +64,12 @@ class CollectionController {
     const collection = req.body.collections;
     try {
       if (collection) {
-        const findCollection = await Collection.findOneAndDelete({
+        const findCollection = await Collections.findOneAndDelete({
           _id: req.params.id,
         });
         res.status(200).json("Delete Collection Success");
       } else {
-        const category = await Collection.findByIdAndUpdate(
+        const category = await Collections.findByIdAndUpdate(
           {
             _id: req.params.id,
           },
