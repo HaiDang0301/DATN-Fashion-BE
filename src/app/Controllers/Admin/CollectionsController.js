@@ -61,9 +61,9 @@ class CollectionController {
     }
   }
   async destroy(req, res, next) {
-    const collection = req.body.collections;
+    const id = req.params.id;
     try {
-      if (collection) {
+      if (id) {
         const findCollection = await Collections.findOneAndDelete({
           _id: req.params.id,
         });

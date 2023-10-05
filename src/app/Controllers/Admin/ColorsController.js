@@ -6,13 +6,13 @@ class ColorController {
   }
   async store(req, res, next) {
     try {
-      const color = req.body.colors;
-      const findColor = await Colors.findOne({ color: color });
+      const colors = req.body.colors;
+      const findColor = await Colors.findOne({ colors: colors });
       if (findColor) {
         res.status(401).json("Color has existed");
       } else {
         const color = new Colors({
-          color: req.body.colors,
+          colors: req.body.colors,
         });
         color.save();
         res.status(200).json("Add Color Success");
@@ -30,7 +30,7 @@ class ColorController {
           {
             _id: id,
           },
-          { color: req.body.colors }
+          { colors: req.body.colors }
         );
         res.status(200).json("Update Color Success");
       } else {
