@@ -12,7 +12,7 @@ class ColorController {
         res.status(401).json("Color has existed");
       } else {
         const color = new Colors({
-          color: req.body.colors,
+          colors: req.body.colors,
         });
         color.save();
         res.status(200).json("Add Color Success");
@@ -30,7 +30,7 @@ class ColorController {
           {
             _id: id,
           },
-          { color: req.body.colors }
+          { colors: req.body.colors }
         );
         res.status(200).json("Update Color Success");
       } else {
@@ -56,3 +56,29 @@ class ColorController {
   }
 }
 module.exports = new ColorController();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
