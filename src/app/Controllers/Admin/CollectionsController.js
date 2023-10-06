@@ -12,7 +12,6 @@ class CollectionController {
       if (!find) {
         const collection = new Collections({
           collections: req.body.collections,
-          category: req.body.category,
         });
         collection.save();
         res.status(200).json("Add Collection Success");
@@ -61,9 +60,9 @@ class CollectionController {
     }
   }
   async destroy(req, res, next) {
-    const id = req.params.id;
+    const collection = req.body.collections;
     try {
-      if (id) {
+      if (!collection) {
         const findCollection = await Collections.findOneAndDelete({
           _id: req.params.id,
         });
@@ -73,7 +72,7 @@ class CollectionController {
           {
             _id: req.params.id,
           },
-          { $pull: { categories: { _id: req.body.idc } } }
+          { $pull: { categories: { _id: req.body.id } } }
         );
         res.status(200).json("Delete Category Success");
       }
