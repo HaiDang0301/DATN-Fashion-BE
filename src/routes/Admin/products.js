@@ -1,0 +1,10 @@
+const express = require("express");
+const products = require("../../app/Controllers/Admin/ProductsController");
+const router = express.Router();
+router.get("/api/admin/products", products.index);
+router.post("/api/admin/products", products.store);
+router.get("/api/admin/products/:id/edit", products.edit);
+router.put("/api/admin/products/:id", products.update);
+router.get("/api/admin/products", products.index);
+router.delete("/api/admin/products/:id", products.destroy);
+module.exports = router;
