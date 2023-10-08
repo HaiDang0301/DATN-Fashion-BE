@@ -1,8 +1,17 @@
 const Collections = require("../../Models/CollectionsModel");
 class CollectionController {
   async show(req, res, next) {
-    const collections = await Collections.find({});
-    res.json(collections);
+    const collection = req.query.collection;
+    let cateria = {};
+    if (collection) {
+      cateria = { collections: collection };
+    }
+    try {
+      const collections = await Collections.find(cateria);
+      res.status(200).json(collections);
+    } catch (error) {
+      res.status(500).json("Connect Server False");
+    }
   }
   async store(req, res, next) {
     try {

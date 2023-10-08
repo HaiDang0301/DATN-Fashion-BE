@@ -27,6 +27,7 @@ const Product = new Schema(
     producer: { type: String, required: true },
     description: { type: String, required: true },
     quantity_sold: { type: String, default: 0 },
+    out_of_promotion: { type: Date, default: Date.now() },
     slug: { type: String, slug: "name" },
     status: { type: String, default: "Stocking" },
   },
