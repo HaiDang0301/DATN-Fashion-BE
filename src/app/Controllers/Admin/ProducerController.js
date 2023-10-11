@@ -34,7 +34,7 @@ class ProducerController {
       const findEmail = await Producers.findOne({ email: email });
       const findPhone = await Producers.findOne({ phone_number: phone_number });
       if (findName || findEmail || findPhone) {
-        res.status(401).json("Producer has existed");
+        res.status(409).json("Producer has existed");
       } else {
         const producer = new Producers({
           name: req.body.name,

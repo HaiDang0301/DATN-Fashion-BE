@@ -6,8 +6,8 @@ const Product = new Schema(
   {
     image: [
       {
-        url: { type: String, required: true },
-        public_id: { type: String, required: true },
+        url: { type: String },
+        public_id: { type: String },
       },
     ],
     name: { type: String, required: true, unique: true },
@@ -16,18 +16,24 @@ const Product = new Schema(
     category: { type: String, required: true },
     sizes: [
       {
-        size: { type: String, required: true },
-        quantity: { type: String, required: true },
+        size: { type: String },
+        quantity: { type: String },
       },
     ],
     color: { type: String, required: true },
     importPrice: { type: String, required: true },
     price: { type: String, required: true },
     old_price: { type: String },
-    promotion: { type: String },
+    promotion: { type: String, default: 0 },
     producer: { type: String, required: true },
     description: { type: String, required: true },
-    quantity_sold: { type: String, default: 0 },
+    quantity_sold: [
+      {
+        size: { type: String },
+        quantity: { type: String },
+        date_sold: { type: Date },
+      },
+    ],
     out_of_promotion: { type: Date, default: Date.now() },
     slug: { type: String, slug: "name" },
     status: { type: String, default: "Stocking" },

@@ -9,7 +9,7 @@ class ColorController {
       const colors = req.body.colors;
       const findColor = await Colors.findOne({ colors: colors });
       if (findColor) {
-        res.status(401).json("Color has existed");
+        res.status(409).json("Color has existed");
       } else {
         const color = new Colors({
           colors: req.body.colors,

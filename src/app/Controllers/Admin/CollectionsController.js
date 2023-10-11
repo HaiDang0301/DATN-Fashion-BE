@@ -28,9 +28,10 @@ class CollectionController {
         await Collections.findOneAndUpdate(
           {
             collections: req.body.collections,
+            "categories.category": { $ne: req.body.category },
           },
           {
-            $push: {
+            $addToSet: {
               categories: {
                 category: req.body.category,
               },

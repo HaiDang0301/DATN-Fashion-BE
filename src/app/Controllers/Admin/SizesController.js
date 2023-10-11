@@ -9,7 +9,7 @@ class SizeController {
       const size = req.body.sizes;
       const findSize = await Sizes.findOne({ sizes: size });
       if (findSize) {
-        res.status(401).json("Size has existed");
+        res.status(409).json("Size has existed");
       } else {
         const size = new Sizes({
           sizes: req.body.sizes,

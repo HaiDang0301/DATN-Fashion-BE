@@ -1,4 +1,8 @@
 const Products = require("../../Models/ProductsModel");
+const Colors = require("../../Models/ColorsModel");
+const Collections = require("../../Models/CollectionsModel");
+const Producers = require("../../Models/ProducersModel");
+const Sizes = require("../../Models/SizesModel");
 const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
 dotenv.config();
@@ -7,6 +11,7 @@ cloudinary.config({
   api_key: process.env.api_key,
   api_secret: process.env.api_secret,
 });
+const xlxs = require("xlsx");
 class ProductsController {
   async index(req, res, next) {
     let cateria = {};
@@ -135,6 +140,83 @@ class ProductsController {
       }
     }
   }
+  async importExcel(req, res, next) {
+    const fileExcel = req.files.excel;
+    let workbook = xlxs.readFile(fileExcel.tempFilePath);
+    let worksheet = workbook.Sheets[workbook.SheetNames[0]];
+    let data = xlxs.utils.sheet_to_json(worksheet);
+    try {
+      await Products.insertMany(data)
+        .then(() => {
+          data.map(async (item) => {
+            const result = await cloudinary.uploader.upload(
+              "https://s2s.co.th/wp-content/uploads/2019/09/photo-icon-Copy-7.jpg",
+              {
+                folder: `collections/${item.collections}/${item.name}`,
+              }
+            );
+            const producers = await Producers.findOneAndUpdate(
+              { name: item.producer },
+              { $setOnInsert: { name: item.producer } },
+              { upsert: true, returnOriginal: false }
+            );
+            const colors = await Colors.findOneAndUpdate(
+              { colors: item.color },
+              { $setOnInsert: { colors: item.color } },
+              { upsert: true, returnOriginal: false }
+            );
+            const sizes = await Sizes.findOneAndUpdate(
+              { sizes: item.size },
+              { $setOnInsert: { sizes: item.size } },
+              { upsert: true, returnOriginal: false }
+            );
+            const collections = await Collections.findOneAndUpdate(
+              { collections: item.collections },
+              { $setOnInsert: { collections: item.collections } },
+              { upsert: true, returnOriginal: false }
+            );
+            const category = await Collections.findOneAndUpdate(
+              {
+                collections: item.collections,
+                "categories.category": { $ne: item.category },
+              },
+              {
+                $addToSet: {
+                  categories: {
+                    category: item.category,
+                  },
+                },
+              }
+            );
+            const addSizes = await Products.findOneAndUpdate(
+              {
+                name: item.name,
+                "sizes.zise": { $ne: item.size },
+              },
+              {
+                $addToSet: {
+                  sizes: {
+                    size: item.size,
+                    quantity: item.quantity,
+                  },
+                },
+              }
+            );
+          });
+          res.status(200).json("Add Product List Success");
+        })
+        .catch((err) => {
+          res
+            .status(409)
+            .json("There are duplication products or files not in the format");
+        });
+    } catch (error) {
+      res.status(500).json * "Connect Server False";
+    }
+  }
+  async downloadFile(req, res, next) {
+    res.download("./src/public/sampleFile.csv");
+  }
   async edit(req, res, next) {
     const products = await Products.findOne({ _id: req.params.id });
     try {
@@ -167,11 +249,11 @@ class ProductsController {
         product.map(async (item) => {
           const fileUpload = req.files;
           const promotion = req.body.promotion;
-          let price = 0;
+          let price = "";
           if (promotion) {
-            price = item.price - item.price * (promotion / 100);
+            price = req.body.price - req.body.price * (promotion / 100);
           } else {
-            price = item.price;
+            price = req.body.price;
           }
           const urls = [];
           if (name !== item.name && !fileUpload) {
@@ -253,7 +335,7 @@ class ProductsController {
             try {
               return res.status(200).json("Update Products Sucesss");
             } catch (error) {
-              return res.status(403).json("Products has existed");
+              return res.status(409).json("Products has existed");
             }
           }
           if (name === item.name && fileUpload) {
@@ -332,7 +414,7 @@ class ProductsController {
             try {
               res.status(200).json("Update Products Sucesss");
             } catch (error) {
-              res.status(403).json("Products has existed");
+              res.status(409).json("Products has existed");
             }
           } else {
             await Products.findByIdAndUpdate(
@@ -359,7 +441,7 @@ class ProductsController {
             try {
               return res.status(200).json("Update Products Sucesss");
             } catch (error) {
-              return res.status(403).json("Products has existed");
+              return res.status(409).json("Products has existed");
             }
           }
         });
