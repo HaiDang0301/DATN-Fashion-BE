@@ -4,6 +4,7 @@ const ProducerRouter = require("./Admin/producers");
 const AdminProducts = require("./Admin/products");
 const ColorRouter = require("./Admin/colors");
 const SizeRouter = require("./Admin/sizes");
+const BannerRouter = require("./Admin/banners");
 const UserBlogs = require("./User/blogs");
 const UserHome = require("./User/home");
 const AuthsRouter = require("./auths");
@@ -15,6 +16,7 @@ function route(app) {
   app.use("/", AuthsRouter);
   app.use("/", ColorRouter);
   app.use("/", SizeRouter);
+  app.use("/", BannerRouter);
   app.use("/", UserBlogs);
   app.use("/", UserHome);
 }

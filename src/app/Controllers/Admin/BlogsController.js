@@ -52,7 +52,7 @@ class BlogsController {
           description: req.body.description,
         });
         blogs.save();
-        res.status(200).json("Add Blogs Success");
+        res.status(200).json("Add Blog Success");
       }
     } catch (error) {
       res.status(500).json("Connect Server False");
@@ -108,7 +108,7 @@ class BlogsController {
                 description: req.body.description,
               }
             );
-            res.status(200).json("Update Success");
+            res.status(200).json("Update Blog Success");
           }
         });
       }
@@ -123,7 +123,7 @@ class BlogsController {
         const destroy = await cloudinary.uploader.destroy(item.public_id);
         const id = await Blogs.findOneAndDelete({ _id: req.params.id });
         if (id) {
-          res.status(200).json("Delete Success");
+          res.status(200).json("Delete Blog Success");
         } else {
           res.status(404).json("Can't Find Blogs");
         }
