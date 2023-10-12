@@ -8,6 +8,7 @@ const Collection = new Schema(
         category: { type: String },
       },
     ],
+    showHome: { type: String, default: false },
   },
   { timestamps: true }
 );

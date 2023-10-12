@@ -1,6 +1,6 @@
 const Collections = require("../../Models/CollectionsModel");
 class CollectionController {
-  async show(req, res, next) {
+  async index(req, res, next) {
     const collection = req.query.collection;
     let cateria = {};
     if (collection) {
@@ -21,6 +21,7 @@ class CollectionController {
       if (!find) {
         const collection = new Collections({
           collections: req.body.collections,
+          showHome: req.body.showHome,
         });
         collection.save();
         res.status(200).json("Add Collection Success");
@@ -28,6 +29,7 @@ class CollectionController {
         await Collections.findOneAndUpdate(
           {
             collections: req.body.collections,
+            showHome: req.body.showHome,
             "categories.category": { $ne: req.body.category },
           },
           {

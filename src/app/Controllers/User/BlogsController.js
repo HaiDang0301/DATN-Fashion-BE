@@ -8,8 +8,6 @@ class BlogsUserController {
     let totalPage = Math.ceil(countPage / limit);
     const author = req.query.author;
     const hashtag = req.query.hashtag;
-    const begin = req.query.begin;
-    const final = req.query.final;
     if (author) {
       cateria = { author: { $regex: author } };
       const countPage = await Blogs.find(cateria).countDocuments();
