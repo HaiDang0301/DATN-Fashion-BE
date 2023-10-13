@@ -3,6 +3,8 @@ const Schema = mongoose.Schema;
 const Collection = new Schema(
   {
     collections: { type: String, required: true, unique: true },
+    image: { type: String },
+    public_id: { type: String },
     categories: [
       {
         category: { type: String },

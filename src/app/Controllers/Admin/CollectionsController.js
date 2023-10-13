@@ -1,4 +1,12 @@
 const Collections = require("../../Models/CollectionsModel");
+const cloudinary = require("cloudinary").v2;
+const dotenv = require("dotenv");
+dotenv.config();
+cloudinary.config({
+  cloud_name: process.env.cloud_name,
+  api_key: process.env.api_key,
+  api_secret: process.env.api_secret,
+});
 class CollectionController {
   async index(req, res, next) {
     const collection = req.query.collection;
@@ -19,8 +27,15 @@ class CollectionController {
         collections: req.body.collections,
       });
       if (!find) {
+        const fileUpload = req.files.image;
+        const result = await cloudinary.uploader.upload(
+          fileUpload.tempFilePath,
+          { folder: "avatar/collection" }
+        );
         const collection = new Collections({
           collections: req.body.collections,
+          image: result.url,
+          public_id: result.public_id,
           showHome: req.body.showHome,
         });
         collection.save();
@@ -29,7 +44,6 @@ class CollectionController {
         await Collections.findOneAndUpdate(
           {
             collections: req.body.collections,
-            showHome: req.body.showHome,
             "categories.category": { $ne: req.body.category },
           },
           {
@@ -75,10 +89,14 @@ class CollectionController {
     const collection = req.body.collections;
     try {
       if (!collection) {
-        const findCollection = await Collections.findOneAndDelete({
-          _id: req.params.id,
+        const find = await Collections.find({ _id: req.params.id });
+        find.map(async (item) => {
+          await cloudinary.uploader.destroy(item.public_id);
+          await Collections.findOneAndDelete({
+            _id: req.params.id,
+          });
+          res.status(200).json("Delete Collection Success");
         });
-        res.status(200).json("Delete Collection Success");
       } else {
         const category = await Collections.findByIdAndUpdate(
           {

@@ -1,0 +1,10 @@
+const express = require("express");
+const banners = require("../../app/Controllers/Admin/BannersController");
+const Middleware = require("../../middleware/Middleware");
+const router = express.Router();
+router.get("/api/admin/banners", banners.index);
+router.post("/api/admin/banners", banners.store);
+router.get("/api/admin/banners/:id/edit", banners.edit);
+router.put("/api/admin/banners/:id", banners.update);
+router.delete("/api/admin/banners/:id", banners.destroy);
+module.exports = router;
