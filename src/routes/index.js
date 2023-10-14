@@ -1,3 +1,4 @@
+const AuthsRouter = require("./auths");
 const AdminCollection = require("./Admin/collections");
 const AdminBlogs = require("./Admin/blogs");
 const ProducerRouter = require("./Admin/producers");
@@ -7,7 +8,7 @@ const SizeRouter = require("./Admin/sizes");
 const BannerRouter = require("./Admin/banners");
 const UserBlogs = require("./User/blogs");
 const UserHome = require("./User/home");
-const AuthsRouter = require("./auths");
+const userProduct = require("./User/products");
 function route(app) {
   app.use("/", AdminCollection);
   app.use("/", AdminBlogs);
@@ -19,5 +20,6 @@ function route(app) {
   app.use("/", BannerRouter);
   app.use("/", UserBlogs);
   app.use("/", UserHome);
+  app.use("/", userProduct);
 }
 module.exports = route;
