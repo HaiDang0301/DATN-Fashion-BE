@@ -41,10 +41,10 @@ class ProductsController {
     }
     if (price) {
       if (price === "increase") {
-        bySort = { price: "desc" };
+        bySort = { price: "asc" };
       }
       if (price === "reduce") {
-        bySort = { price: "asc" };
+        bySort = { price: "desc" };
       }
     }
     if (page > totalPage) {

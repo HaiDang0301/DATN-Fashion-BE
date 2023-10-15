@@ -9,11 +9,7 @@ cloudinary.config({
 });
 class CollectionController {
   async index(req, res, next) {
-    const collection = req.query.collection;
     let cateria = {};
-    if (collection) {
-      cateria = { collections: collection };
-    }
     try {
       const collections = await Collections.find(cateria);
       res.status(200).json(collections);

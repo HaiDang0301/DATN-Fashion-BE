@@ -8,9 +8,8 @@ process.env.TOKEN_SECRET;
 class AccountsController {
   async index(req, res, next) {
     const id = req.user.id;
-    const user = await Accounts.find({ _id: id });
-    res.json(user);
-    console.log({ id: id });
+    const user = await Accounts.findOne({ _id: id });
+    res.status(200).json(user);
   }
   async register(req, res, next) {
     try {
