@@ -1,10 +1,16 @@
 const Accounts = require("../Models/AuthsModel");
+const cloudinary = require("cloudinary").v2;
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 dotenv.config();
 process.env.TOKEN_SECRET;
+cloudinary.config({
+  cloud_name: process.env.cloud_name,
+  api_key: process.env.api_key,
+  api_secret: process.env.api_secret,
+});
 class AccountsController {
   async index(req, res, next) {
     const id = req.user.id;
@@ -12,6 +18,7 @@ class AccountsController {
     res.status(200).json(user);
   }
   async register(req, res, next) {
+    let image = [];
     try {
       const email = req.body.email;
       const findEmail = await Accounts.findOne({ email: email });
@@ -36,9 +43,17 @@ class AccountsController {
           if (error) {
             res.status(401).json("Can't find email");
           } else {
+            const result = await cloudinary.uploader.upload(
+              "https://cdn.class123.kr/assets/img/sp/img-profile-none-bg.png",
+              {
+                folder: "avatar/user",
+              }
+            );
+            image = { url: result.url, public_id: result.public_id };
             const salt = await bcrypt.genSalt(10);
             const hashedPw = await bcrypt.hash(req.body.password, salt);
             const account = new Accounts({
+              image: image,
               full_name: req.body.full_name,
               email: req.body.email,
               password: hashedPw,
@@ -141,6 +156,55 @@ class AccountsController {
           });
       }
     });
+  }
+  async update(req, res, next) {
+    const id = req.user.id;
+    const fileUpload = req.files;
+    const full_name = req.body.full_name;
+    const phone = req.body.phone;
+    const password = req.body.password;
+    const city = req.body.city;
+    const district = req.body.district;
+    const ward = req.body.ward;
+    const home = req.body.home;
+    let profile = {
+      full_name: full_name,
+      phone: phone,
+      address: {
+        city: city,
+        district: district,
+        ward: ward,
+        address_home: home,
+      },
+    };
+    try {
+      if (fileUpload) {
+        let file = {};
+        const findUser = await Accounts.findOne({ _id: id });
+        await cloudinary.uploader.destroy(findUser.image.public_id);
+        const result = await cloudinary.uploader.upload(
+          fileUpload.image.tempFilePath,
+          { folder: "avatar/user" }
+        );
+        file = { url: result.url, public_id: result.public_id };
+        profile = {
+          ...profile,
+          image: file,
+        };
+      }
+      if (password) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPw = await bcrypt.hash(req.body.password, salt);
+        profile = {
+          ...profile,
+          password: hashedPw,
+        };
+      }
+      await Accounts.findByIdAndUpdate({ _id: id }, profile);
+      res.status(200).json("Update Profile Success");
+    } catch (error) {
+      res.status(500).json("Connect Server False");
+    }
   }
 }
 module.exports = new AccountsController();

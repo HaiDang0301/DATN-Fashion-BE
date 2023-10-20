@@ -2,13 +2,16 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const Account = new Schema(
   {
-    image: { type: String },
+    image: {
+      url: { type: String },
+      public_id: { type: String },
+    },
     full_name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    cart: [
+    carts: [
       {
-        orders: [
+        cart: [
           {
             image: { type: String },
             product_name: { type: String },
@@ -23,16 +26,15 @@ const Account = new Schema(
         ],
       },
     ],
-    address: [
-      {
-        phone: { type: String },
-        city: { type: String },
-        ward: { type: String },
-        district: { type: String },
-        village: { type: String },
-      },
-    ],
+    phone: { type: String },
+    address: {
+      city: { type: String },
+      district: { type: String },
+      ward: { type: String },
+      address_home: { type: String },
+    },
     last_purchase: { type: Date },
+    Registered: { type: String, default: "Not Yet" },
     role: { type: String, default: "client" },
     last_time_login: { type: Date, default: Date.now() },
   },
