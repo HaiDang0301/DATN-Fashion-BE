@@ -1,4 +1,5 @@
 const Products = require("../../Models/ProductsModel");
+const WareHouse = require("../../Models/WareHouse");
 const Colors = require("../../Models/ColorsModel");
 const Collections = require("../../Models/CollectionsModel");
 const Producers = require("../../Models/ProducersModel");
@@ -119,6 +120,12 @@ class ProductsController {
             description: req.body.description,
           });
           await product.save();
+          const wareHouse = new WareHouse({
+            id_product: product._id,
+            products: arrSizes,
+            type: 0,
+          });
+          wareHouse.save();
           res.status(200).json("Add product success");
         } else {
           const product = new Products({
@@ -135,6 +142,12 @@ class ProductsController {
             description: req.body.description,
           });
           await product.save();
+          const wareHouse = new WareHouse({
+            id_product: product._id,
+            products: arrSizes,
+            type: 0,
+          });
+          wareHouse.save();
           res.status(200).json("Add product success");
         }
       }
@@ -147,7 +160,7 @@ class ProductsController {
     let data = xlxs.utils.sheet_to_json(worksheet);
     try {
       await Products.insertMany(data)
-        .then(() => {
+        .then(async (products) => {
           data.map(async (item) => {
             const result = await cloudinary.uploader.upload(
               "https://s2s.co.th/wp-content/uploads/2019/09/photo-icon-Copy-7.jpg",
@@ -202,6 +215,19 @@ class ProductsController {
                 },
               }
             );
+            await WareHouse.insertMany([
+              {
+                product_id: addSizes._id,
+                price: item.importPrice,
+                sizes: [
+                  {
+                    size: item.size,
+                    quantity: item.quantity,
+                  },
+                ],
+                type: 0,
+              },
+            ]);
           });
           res.status(200).json("Add Product List Success");
         })
@@ -232,9 +258,11 @@ class ProductsController {
   async update(req, res, next) {
     const collection = req.body.collections;
     const id = req.params.id;
+    const sizeID = req.body.sizeID;
     const size = req.body.size;
     const quantity = req.body.quantity;
     const arrSizes = [];
+    console.log(sizeID);
     if (typeof size === "object") {
       for (let i = 0; i < size.length; i++) {
         arrSizes.push({ size: size[i], quantity: quantity[i] });
@@ -297,6 +325,16 @@ class ProductsController {
                   slug: name.split(" ").join("-"),
                 }
               );
+              if (!sizeID) {
+                await WareHouse.findOneAndUpdate(
+                  { product_id: id },
+                  {
+                    price: price,
+                    sizes: arrSizes,
+                  }
+                );
+              } else {
+              }
             } else {
               await cloudinary.api.delete_resources_by_prefix(
                 `collections/${item.collections}/${item.name}`
@@ -331,6 +369,15 @@ class ProductsController {
                   slug: name.split(" ").join("-"),
                 }
               );
+              if (!sizeID) {
+                await WareHouse.findOneAndUpdate(
+                  { product_id: id },
+                  {
+                    price: price,
+                    sizes: arrSizes,
+                  }
+                );
+              }
             }
             try {
               return res.status(200).json("Update Products Sucesss");
@@ -376,6 +423,15 @@ class ProductsController {
                   slug: name.split(" ").join("-"),
                 }
               );
+              if (!sizeID) {
+                await WareHouse.findOneAndUpdate(
+                  { product_id: id },
+                  {
+                    price: price,
+                    sizes: arrSizes,
+                  }
+                );
+              }
             } else {
               await cloudinary.api.delete_resources_by_prefix(
                 `collections/${item.collections}/${item.name}`
@@ -410,6 +466,15 @@ class ProductsController {
                   slug: name.split(" ").join("-"),
                 }
               );
+              if (!sizeID) {
+                await WareHouse.findOneAndUpdate(
+                  { product_id: id },
+                  {
+                    price: price,
+                    sizes: arrSizes,
+                  }
+                );
+              }
             }
             try {
               res.status(200).json("Update Products Sucesss");
@@ -438,6 +503,24 @@ class ProductsController {
                 slug: name.split(" ").join("-"),
               }
             );
+            if (!sizeID) {
+              await WareHouse.findOneAndUpdate(
+                { product_id: id },
+                {
+                  price: price,
+                  sizes: arrSizes,
+                }
+              );
+            } else {
+              const findProduct = await Products.findOne({ _id: id });
+              findProduct.$markValid;
+              console.log(findProduct);
+              // const wareHouse = new WareHouse({
+              //   product_id: id,
+              //   price: price,
+              //   sizes: 1,
+              // });
+            }
             try {
               return res.status(200).json("Update Products Sucesss");
             } catch (error) {
