@@ -1,4 +1,5 @@
 const Products = require("../../Models/ProductsModel");
+const WareHouse = require("../../Models/WareHouse");
 const Colors = require("../../Models/ColorsModel");
 const Collections = require("../../Models/CollectionsModel");
 const Producers = require("../../Models/ProducersModel");
@@ -119,6 +120,13 @@ class ProductsController {
             description: req.body.description,
           });
           await product.save();
+          const addNew = new WareHouse({
+            product_id: product.id,
+            price: req.body.importPrice,
+            sizes: arrSizes,
+            type: 0,
+          });
+          await addNew.save();
           res.status(200).json("Add product success");
         } else {
           const product = new Products({
@@ -135,6 +143,13 @@ class ProductsController {
             description: req.body.description,
           });
           await product.save();
+          const addNew = new WareHouse({
+            product_id: product.id,
+            price: req.body.importPrice,
+            sizes: arrSizes,
+            type: 0,
+          });
+          await addNew.save();
           res.status(200).json("Add product success");
         }
       }
@@ -147,7 +162,7 @@ class ProductsController {
     let data = xlxs.utils.sheet_to_json(worksheet);
     try {
       await Products.insertMany(data)
-        .then(() => {
+        .then(async (products) => {
           data.map(async (item) => {
             const result = await cloudinary.uploader.upload(
               "https://s2s.co.th/wp-content/uploads/2019/09/photo-icon-Copy-7.jpg",
@@ -202,6 +217,19 @@ class ProductsController {
                 },
               }
             );
+            await WareHouse.insertMany([
+              {
+                product_id: addSizes._id,
+                price: item.importPrice,
+                sizes: [
+                  {
+                    size: item.size,
+                    quantity: item.quantity,
+                  },
+                ],
+                type: 0,
+              },
+            ]);
           });
           res.status(200).json("Add Product List Success");
         })
@@ -232,6 +260,7 @@ class ProductsController {
   async update(req, res, next) {
     const collection = req.body.collections;
     const id = req.params.id;
+    const sizeID = req.body.sizeID;
     const size = req.body.size;
     const quantity = req.body.quantity;
     const arrSizes = [];
@@ -254,6 +283,65 @@ class ProductsController {
             price = req.body.price - req.body.price * (promotion / 100);
           } else {
             price = req.body.price;
+          }
+          if (!sizeID) {
+            if (promotion === 0) {
+              await arrSizes.shift();
+              const addNew = new WareHouse({
+                product_id: id,
+                price: req.body.importPrice,
+                sizes: arrSizes,
+                type: 0,
+              });
+              await addNew.save();
+            }
+          } else {
+            const findID = await Products.findOne({ _id: id });
+            let arr = findID.sizes;
+            if (typeof size === "object") {
+              for (let i = 0; i < size.length; i++) {
+                arr.unshift({ size: size[i], quantity: quantity[i] });
+              }
+            } else {
+              arr.unshift({ size: size, quantity: quantity });
+            }
+            const result = {};
+            arr.forEach((obj) => {
+              const { size, quantity } = obj;
+              if (result.hasOwnProperty(size)) {
+                result[size] -= quantity;
+              } else {
+                result[size] = quantity;
+              }
+            });
+            let objsizes = {
+              size: Object.keys(result),
+              quantity: Object.values(result),
+            };
+            let sizes = [];
+            if (typeof objsizes === "object") {
+              for (let i = 0; i < objsizes.size.length; i++) {
+                sizes.push({
+                  size: objsizes.size[i],
+                  quantity: objsizes.quantity[i],
+                });
+              }
+            } else {
+              return sizes.push({
+                size: objsizes.size,
+                quantity: objsizes.quantity,
+              });
+            }
+            const removeSizeZero = sizes.filter((item) => {
+              return item.quantity != 0;
+            });
+            const addwarehouse = new WareHouse({
+              product_id: id,
+              price: req.body.importPrice,
+              sizes: removeSizeZero,
+              type: 0,
+            });
+            await addwarehouse.save();
           }
           const urls = [];
           if (name !== item.name && !fileUpload) {
