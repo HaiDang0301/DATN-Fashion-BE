@@ -262,7 +262,6 @@ class ProductsController {
     const size = req.body.size;
     const quantity = req.body.quantity;
     const arrSizes = [];
-    console.log(sizeID);
     if (typeof size === "object") {
       for (let i = 0; i < size.length; i++) {
         arrSizes.push({ size: size[i], quantity: quantity[i] });
@@ -288,6 +287,59 @@ class ProductsController {
             return res.status(403).json("Please provide image");
           }
           if (name !== item.name && fileUpload) {
+            if (!sizeID) {
+              await WareHouse.findOneAndUpdate(
+                { product_id: id },
+                {
+                  price: price,
+                  sizes: arrSizes,
+                }
+              );
+            } else {
+              const findID = await Products.findOne({ _id: id });
+              let arr = findID.sizes;
+              if (typeof size === "object") {
+                for (let i = 0; i < size.length; i++) {
+                  arr.unshift({ size: size[i], quantity: quantity[i] });
+                }
+              } else {
+                arr.unshift({ size: size, quantity: quantity });
+              }
+              const result = {};
+              arr.forEach((obj) => {
+                const { size, quantity } = obj;
+                if (result.hasOwnProperty(size)) {
+                  result[size] -= quantity;
+                } else {
+                  result[size] = quantity;
+                }
+              });
+              let sizes = {
+                size: Object.keys(result),
+                quantity: Object.values(result),
+              };
+              let wareHouse = [];
+              if (typeof sizes === "object") {
+                for (let i = 0; i < sizes.size.length; i++) {
+                  wareHouse.push({
+                    size: sizes.size[i],
+                    quantity: sizes.quantity[i],
+                  });
+                }
+              } else {
+                wareHouse.push({
+                  size: sizes.size,
+                  quantity: sizes.quantity,
+                });
+              }
+              const addwarehouse = new WareHouse({
+                product_id: id,
+                price: price,
+                sizes: wareHouse,
+                type: 0,
+              });
+              await addwarehouse.save();
+            }
             if (fileUpload.image.length > 1) {
               await cloudinary.api.delete_resources_by_prefix(
                 `collections/${item.collections}/${item.name}`
@@ -325,6 +377,7 @@ class ProductsController {
                   slug: name.split(" ").join("-"),
                 }
               );
+            } else {
               if (!sizeID) {
                 await WareHouse.findOneAndUpdate(
                   { product_id: id },
@@ -334,8 +387,50 @@ class ProductsController {
                   }
                 );
               } else {
+                const findID = await Products.findOne({ _id: id });
+                let arr = findID.sizes;
+                if (typeof size === "object") {
+                  for (let i = 0; i < size.length; i++) {
+                    arr.unshift({ size: size[i], quantity: quantity[i] });
+                  }
+                } else {
+                  arr.unshift({ size: size, quantity: quantity });
+                }
+                const result = {};
+                arr.forEach((obj) => {
+                  const { size, quantity } = obj;
+                  if (result.hasOwnProperty(size)) {
+                    result[size] -= quantity;
+                  } else {
+                    result[size] = quantity;
+                  }
+                });
+                let sizes = {
+                  size: Object.keys(result),
+                  quantity: Object.values(result),
+                };
+                let wareHouse = [];
+                if (typeof sizes === "object") {
+                  for (let i = 0; i < sizes.size.length; i++) {
+                    wareHouse.push({
+                      size: sizes.size[i],
+                      quantity: sizes.quantity[i],
+                    });
+                  }
+                } else {
+                  wareHouse.push({
+                    size: sizes.size,
+                    quantity: sizes.quantity,
+                  });
+                }
+                const addwarehouse = new WareHouse({
+                  product_id: id,
+                  price: price,
+                  sizes: wareHouse,
+                  type: 0,
+                });
+                await addwarehouse.save();
               }
-            } else {
               await cloudinary.api.delete_resources_by_prefix(
                 `collections/${item.collections}/${item.name}`
               );
@@ -369,15 +464,6 @@ class ProductsController {
                   slug: name.split(" ").join("-"),
                 }
               );
-              if (!sizeID) {
-                await WareHouse.findOneAndUpdate(
-                  { product_id: id },
-                  {
-                    price: price,
-                    sizes: arrSizes,
-                  }
-                );
-              }
             }
             try {
               return res.status(200).json("Update Products Sucesss");
@@ -482,6 +568,59 @@ class ProductsController {
               res.status(409).json("Products has existed");
             }
           } else {
+            if (!sizeID) {
+              await WareHouse.findOneAndUpdate(
+                { product_id: id },
+                {
+                  price: price,
+                  sizes: arrSizes,
+                }
+              );
+            } else {
+              const findID = await Products.findOne({ _id: id });
+              let arr = findID.sizes;
+              if (typeof size === "object") {
+                for (let i = 0; i < size.length; i++) {
+                  arr.unshift({ size: size[i], quantity: quantity[i] });
+                }
+              } else {
+                arr.unshift({ size: size, quantity: quantity });
+              }
+              const result = {};
+              arr.forEach((obj) => {
+                const { size, quantity } = obj;
+                if (result.hasOwnProperty(size)) {
+                  result[size] -= quantity;
+                } else {
+                  result[size] = quantity;
+                }
+              });
+              let sizes = {
+                size: Object.keys(result),
+                quantity: Object.values(result),
+              };
+              let wareHouse = [];
+              if (typeof sizes === "object") {
+                for (let i = 0; i < sizes.size.length; i++) {
+                  wareHouse.push({
+                    size: sizes.size[i],
+                    quantity: sizes.quantity[i],
+                  });
+                }
+              } else {
+                wareHouse.push({
+                  size: sizes.size,
+                  quantity: sizes.quantity,
+                });
+              }
+              const addwarehouse = new WareHouse({
+                product_id: id,
+                price: price,
+                sizes: wareHouse,
+                type: 0,
+              });
+              await addwarehouse.save();
+            }
             await Products.findByIdAndUpdate(
               { _id: id },
               {
@@ -503,24 +642,6 @@ class ProductsController {
                 slug: name.split(" ").join("-"),
               }
             );
-            if (!sizeID) {
-              await WareHouse.findOneAndUpdate(
-                { product_id: id },
-                {
-                  price: price,
-                  sizes: arrSizes,
-                }
-              );
-            } else {
-              const findProduct = await Products.findOne({ _id: id });
-              findProduct.$markValid;
-              console.log(findProduct);
-              // const wareHouse = new WareHouse({
-              //   product_id: id,
-              //   price: price,
-              //   sizes: 1,
-              // });
-            }
             try {
               return res.status(200).json("Update Products Sucesss");
             } catch (error) {
