@@ -260,7 +260,6 @@ class ProductsController {
   async update(req, res, next) {
     const collection = req.body.collections;
     const id = req.params.id;
-    const sizeID = req.body.sizeID;
     const size = req.body.size;
     const quantity = req.body.quantity;
     const arrSizes = [];
@@ -284,57 +283,46 @@ class ProductsController {
           } else {
             price = req.body.price;
           }
-          if (!sizeID) {
-            if (promotion === 0) {
-              await arrSizes.shift();
-              const addNew = new WareHouse({
-                product_id: id,
-                price: req.body.importPrice,
-                sizes: arrSizes,
-                type: 0,
-              });
-              await addNew.save();
+          const findID = await Products.findOne({ _id: id });
+          let arr = findID.sizes;
+          if (typeof size === "object") {
+            for (let i = 0; i < size.length; i++) {
+              arr.unshift({ size: size[i], quantity: quantity[i] });
             }
           } else {
-            const findID = await Products.findOne({ _id: id });
-            let arr = findID.sizes;
-            if (typeof size === "object") {
-              for (let i = 0; i < size.length; i++) {
-                arr.unshift({ size: size[i], quantity: quantity[i] });
-              }
+            arr.unshift({ size: size, quantity: quantity });
+          }
+          const result = {};
+          arr.forEach((obj) => {
+            const { size, quantity } = obj;
+            if (result.hasOwnProperty(size)) {
+              result[size] -= quantity;
             } else {
-              arr.unshift({ size: size, quantity: quantity });
+              result[size] = quantity;
             }
-            const result = {};
-            arr.forEach((obj) => {
-              const { size, quantity } = obj;
-              if (result.hasOwnProperty(size)) {
-                result[size] -= quantity;
-              } else {
-                result[size] = quantity;
-              }
-            });
-            let objsizes = {
-              size: Object.keys(result),
-              quantity: Object.values(result),
-            };
-            let sizes = [];
-            if (typeof objsizes === "object") {
-              for (let i = 0; i < objsizes.size.length; i++) {
-                sizes.push({
-                  size: objsizes.size[i],
-                  quantity: objsizes.quantity[i],
-                });
-              }
-            } else {
-              return sizes.push({
-                size: objsizes.size,
-                quantity: objsizes.quantity,
+          });
+          let objsizes = {
+            size: Object.keys(result),
+            quantity: Object.values(result),
+          };
+          let sizes = [];
+          if (typeof objsizes === "object") {
+            for (let i = 0; i < objsizes.size.length; i++) {
+              sizes.push({
+                size: objsizes.size[i],
+                quantity: objsizes.quantity[i],
               });
             }
-            const removeSizeZero = sizes.filter((item) => {
-              return item.quantity != 0;
+          } else {
+            return sizes.push({
+              size: objsizes.size,
+              quantity: objsizes.quantity,
             });
+          }
+          const removeSizeZero = sizes.filter((item) => {
+            return item.quantity != 0;
+          });
+          if (removeSizeZero.length > 0) {
             const addwarehouse = new WareHouse({
               product_id: id,
               price: req.body.importPrice,

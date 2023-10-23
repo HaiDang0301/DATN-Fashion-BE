@@ -3,11 +3,11 @@ const Schema = mongoose.Schema;
 const WareHouse = new Schema(
   {
     product_id: { type: String },
-    price: { type: String },
+    price: { type: Number },
     sizes: [
       {
         size: { type: String },
-        quantity: { type: String },
+        quantity: { type: Number },
       },
     ],
     type: { type: String },
