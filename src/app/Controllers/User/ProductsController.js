@@ -71,7 +71,42 @@ class ProductsController {
       totalPage = Math.ceil(countDoc / limit);
     }
     if (min && max) {
-      cateria = { price: { $gt: min, $lt: max } };
+      if (type == "new-products") {
+        cateria = {
+          $and: [
+            (cateria = {
+              createdAt: {
+                $lt: new Date(),
+                $gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+              },
+            }),
+            { price: { $gt: min, $lt: max } },
+          ],
+        };
+      }
+      if (type === "sale") {
+        cateria = {
+          $and: [
+            { promotion: { $gt: 0 } },
+            { out_of_promotion: { $gt: Date.now() } },
+            { price: { $gt: min, $lt: max } },
+          ],
+        };
+      }
+      if (type !== "sale" && type !== "new-products") {
+        cateria = {
+          $and: [{ collections: type }, { price: { $gt: min, $lt: max } }],
+        };
+      }
+      if (category) {
+        cateria = {
+          $and: [
+            { collections: type },
+            { category: category },
+            { price: { $gt: min, $lt: max } },
+          ],
+        };
+      }
       const countDoc = await Products.find(cateria).countDocuments();
       totalPage = Math.ceil(countDoc / limit);
     }

@@ -9,6 +9,7 @@ const BannerRouter = require("./Admin/banners");
 const UserBlogs = require("./User/blogs");
 const UserHome = require("./User/home");
 const userProduct = require("./User/products");
+const CartsUser = require("./User/carts");
 function route(app) {
   app.use("/", AdminCollection);
   app.use("/", AdminBlogs);
@@ -21,5 +22,6 @@ function route(app) {
   app.use("/", UserBlogs);
   app.use("/", UserHome);
   app.use("/", userProduct);
+  app.use("/", CartsUser);
 }
 module.exports = route;
