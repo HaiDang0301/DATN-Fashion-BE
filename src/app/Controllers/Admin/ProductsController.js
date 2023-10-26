@@ -281,7 +281,7 @@ class ProductsController {
           let price = "";
           if (promotion) {
             price = req.body.price - req.body.price * (promotion / 100);
-            await Carts.updateOne(
+            await Carts.updateMany(
               {
                 carts: { $elemMatch: { product_id: id } },
               },
@@ -289,7 +289,7 @@ class ProductsController {
             );
           } else {
             price = req.body.price;
-            await Carts.updateOne(
+            await Carts.updateMany(
               {
                 carts: { $elemMatch: { product_id: id } },
               },
