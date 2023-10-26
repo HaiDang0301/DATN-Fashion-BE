@@ -9,23 +9,14 @@ const Account = new Schema(
     full_name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    orders: [
+    carts: [
       {
-        order: [
-          {
-            product_id: { type: String },
-            name: { type: String },
-            size: { type: String },
-            quantity: { type: String },
-            price: { type: Number },
-            address: {
-              city: { type: String },
-              district: { type: String },
-              ward: { type: String },
-              address_home: { type: String },
-            },
-          },
-        ],
+        product_id: { type: String, require: true },
+        product_name: { type: String, require: true },
+        image: { type: String, require: true },
+        size: { type: String, require: true },
+        quantity: { type: Number, require: true },
+        price: { type: Number, require: true },
       },
     ],
     phone: { type: String },

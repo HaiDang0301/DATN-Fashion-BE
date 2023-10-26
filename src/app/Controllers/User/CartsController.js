@@ -1,10 +1,10 @@
-const Carts = require("../../Models/CartsModel");
+const Accounts = require("../../Models/AuthsModel");
 const Products = require("../../Models/ProductsModel");
 class CartsController {
   async index(req, res, next) {
     const id = req.user.id;
     try {
-      const cart = await Carts.findOne({ user_id: id });
+      const cart = await Accounts.findOne({ _id: id });
       res.status(200).json(cart);
     } catch (error) {
       res.status(500).json("Connect Server Errors");
@@ -31,33 +31,17 @@ class CartsController {
         });
         findSize.map(async (product) => {
           if (quantity <= product.quantity) {
-            const user_id = await Carts.findOne({ user_id: id });
-            if (!user_id) {
-              const carts = new Carts({
-                user_id: id,
-                carts: {
-                  product_id: product_id,
-                  product_name: product_name,
-                  image: image,
-                  size: size,
-                  quantity: quantity,
-                  price: price,
-                },
-              });
-              carts.save();
-              return res
-                .status(200)
-                .json("Add products to successful shopping cart");
-            } else {
-              const findProduct = await Carts.find({
-                user_id: id,
+            const user_id = await Accounts.findOne({ _id: id });
+            if (user_id) {
+              const findProduct = await Accounts.find({
+                _id: id,
                 carts: { $elemMatch: { product_id: product_id, size: size } },
               });
               if (findProduct.length > 0) {
                 res.status(409).json("Products already in the cart");
               } else {
-                await Carts.findOneAndUpdate(
-                  { user_id: id },
+                await Accounts.findOneAndUpdate(
+                  { _id: id },
                   {
                     user_id: id,
                     $push: {
@@ -89,6 +73,21 @@ class CartsController {
       return res.status(500).json("Connect Server Errors");
     }
   }
-  async update(req, res, next) {}
+  async destroy(req, res, next) {
+    const user_id = req.user.id;
+    const product_id = req.body.product_id;
+    try {
+      await Accounts.findOneAndUpdate(
+        {
+          _id: user_id,
+          carts: { $elemMatch: { product_id: product_id } },
+        },
+        { $pull: { carts: { product_id: product_id } } }
+      );
+      res.status(200).json("Delete products from successful carts");
+    } catch (error) {
+      res.status(500).json("Connect Server Errors");
+    }
+  }
 }
 module.exports = new CartsController();
