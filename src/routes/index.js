@@ -10,6 +10,7 @@ const UserBlogs = require("./User/blogs");
 const UserHome = require("./User/home");
 const userProduct = require("./User/products");
 const CartsUser = require("./User/carts");
+const OrdersUser = require("./User/orders");
 function route(app) {
   app.use("/", AdminCollection);
   app.use("/", AdminBlogs);
@@ -23,5 +24,6 @@ function route(app) {
   app.use("/", UserHome);
   app.use("/", userProduct);
   app.use("/", CartsUser);
+  app.use("/", OrdersUser);
 }
 module.exports = route;

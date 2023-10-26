@@ -1,5 +1,6 @@
 const Accounts = require("../../Models/AuthsModel");
 const Products = require("../../Models/ProductsModel");
+const Orders = require("../../Models/OrdersModel");
 class CartsController {
   async index(req, res, next) {
     const id = req.user.id;
@@ -87,6 +88,41 @@ class CartsController {
       res.status(200).json("Delete products from successful carts");
     } catch (error) {
       res.status(500).json("Connect Server Errors");
+    }
+  }
+  async orders(req, res, next) {
+    const id = req.user.id;
+    const full_name = req.body.full_name;
+    const email = req.body.email;
+    const phone = req.body.phone;
+    const address = req.body.address;
+    const carts = req.body.carts;
+    const totalMoney = req.body.totalMoney;
+    try {
+      if (!full_name || !email || !phone || carts.length === 0) {
+        res.status(403).json("Please provide full information");
+      } else {
+        const orders = new Orders({
+          user_id: id,
+          orders: carts,
+          totalMoney: totalMoney,
+          address: address,
+        });
+        await orders.save();
+        await Accounts.findOneAndUpdate(
+          {
+            _id: id,
+          },
+          { carts: [] }
+        );
+        res
+          .status(200)
+          .json(
+            "Successful order, please wait for the admin to confirm your order"
+          );
+      }
+    } catch (error) {
+      res.status(500).json("Connect Server False");
     }
   }
 }
