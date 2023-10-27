@@ -17,7 +17,7 @@ const Product = new Schema(
     sizes: [
       {
         size: { type: String },
-        quantity: { type: String },
+        quantity: { type: Number },
       },
     ],
     color: { type: String, required: true },

@@ -1,4 +1,5 @@
 const Products = require("../../Models/ProductsModel");
+const Accounts = require("../../Models/AuthsModel");
 const WareHouse = require("../../Models/WareHouse");
 const Colors = require("../../Models/ColorsModel");
 const Collections = require("../../Models/CollectionsModel");
@@ -280,8 +281,20 @@ class ProductsController {
           let price = "";
           if (promotion) {
             price = req.body.price - req.body.price * (promotion / 100);
+            await Accounts.updateMany(
+              {
+                carts: { $elemMatch: { product_id: id } },
+              },
+              { $set: { "carts.$.price": price } }
+            );
           } else {
             price = req.body.price;
+            await Accounts.updateMany(
+              {
+                carts: { $elemMatch: { product_id: id } },
+              },
+              { $set: { "carts.$.price": price } }
+            );
           }
           const findID = await Products.findOne({ _id: id });
           let arr = findID.sizes;

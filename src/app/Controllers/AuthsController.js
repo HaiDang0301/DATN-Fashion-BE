@@ -21,6 +21,7 @@ class AccountsController {
     let image = [];
     try {
       const email = req.body.email;
+      const token = jwt.sign({ email: email }, process.env.TOKEN_SECRET);
       const findEmail = await Accounts.findOne({ email: email });
       if (findEmail) {
         res.status(409).json("The account has been registered");
@@ -36,12 +37,12 @@ class AccountsController {
           from: process.env.Email_User,
           to: req.body.email,
           subject: "Notice: Registration Of Fashion Shop Account",
-          html: `<p>You have successfully registered the account.Please <a href ="${process.env.HTTP_Login}">click here</a> to login</p>`,
+          html: `<p>You have successfully registered the account.Please <a href ="${process.env.HTTP_Verify}/${token}">click here</a> to verify account</p>`,
           text: "click",
         };
         transporter.sendMail(mailOptions, async (error, info) => {
           if (error) {
-            res.status(401).json("Can't find email");
+            res.status(500).json(error);
           } else {
             const result = await cloudinary.uploader.upload(
               "https://cdn.class123.kr/assets/img/sp/img-profile-none-bg.png",
@@ -57,14 +58,45 @@ class AccountsController {
               full_name: req.body.full_name,
               email: req.body.email,
               password: hashedPw,
+              verify: false,
             });
             await account.save();
-            res.status(200).json("Successful account registration");
+            res.status(200).json("Please go to Gmail to verify your account");
           }
         });
       }
     } catch (error) {
       res.status(500).json("Connect Server False");
+    }
+  }
+  async verify(req, res, next) {
+    const token = req.params.token;
+    try {
+      if (token) {
+        const decodedToken = await jwt.decode(token);
+        await Accounts.findOneAndUpdate(
+          { email: decodedToken.email },
+          { verify: true }
+        );
+        res.status(200).json("Verify Account Success");
+      } else {
+        res.status(403).json("Wrong Token");
+      }
+    } catch (error) {}
+  }
+  async newsletter(req, res, next) {
+    const email = req.body.email;
+    try {
+      await Accounts.findOne({ email: email });
+      if (email) {
+        await Accounts.findOneAndUpdate({ email: email }, { registered: true });
+        res.status(200).json("Subscribe newsletter");
+      }
+      if (!email) {
+        res.status(404).json("Please check out your email");
+      }
+    } catch (error) {
+      res.status(500).json("Connect Server Errors");
     }
   }
   async login(req, res, next) {
@@ -77,7 +109,7 @@ class AccountsController {
       if (!password) {
         return res.status(401).json("Wrong account or password information");
       }
-      if (email && password) {
+      if (email && password && email.verify === true) {
         const token = await jwt.sign(
           {
             id: email._id,
@@ -92,6 +124,9 @@ class AccountsController {
           { last_time_login: Date.now() }
         );
         return res.status(200).json({ others, token });
+      }
+      if (email && password && email.verify === false) {
+        res.status(403).json("Your account has not been verified");
       }
     } catch (error) {
       res.status(500).send("Connect server false");
