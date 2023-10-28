@@ -1,6 +1,7 @@
 const AuthsRouter = require("./auths");
 const AdminCollection = require("./Admin/collections");
 const AdminBlogs = require("./Admin/blogs");
+const AdminOrders = require("./Admin/orders");
 const ProducerRouter = require("./Admin/producers");
 const AdminProducts = require("./Admin/products");
 const ColorRouter = require("./Admin/colors");
@@ -14,6 +15,7 @@ const OrdersUser = require("./User/orders");
 function route(app) {
   app.use("/", AdminCollection);
   app.use("/", AdminBlogs);
+  app.use("/", AdminOrders);
   app.use("/", AdminProducts);
   app.use("/", ProducerRouter);
   app.use("/", AuthsRouter);

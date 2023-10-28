@@ -104,6 +104,7 @@ class CartsController {
       } else {
         const orders = new Orders({
           user_id: id,
+          full_name: full_name,
           orders: carts,
           totalMoney: totalMoney,
           address: address,
