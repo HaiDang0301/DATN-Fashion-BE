@@ -4,6 +4,6 @@ const Middleware = require("../../middleware/Middleware");
 const router = express.Router();
 router.get("/api/user/carts", Middleware.User, CartsController.index);
 router.post("/api/user/carts", Middleware.User, CartsController.store);
-router.delete("/api/user/carts", Middleware.User, CartsController.destroy);
+router.delete("/api/user/carts/:id", Middleware.User, CartsController.destroy);
 router.post("/api/user/carts/orders", Middleware.User, CartsController.orders);
 module.exports = router;

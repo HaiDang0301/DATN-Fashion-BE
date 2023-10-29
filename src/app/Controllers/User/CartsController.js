@@ -76,7 +76,7 @@ class CartsController {
   }
   async destroy(req, res, next) {
     const user_id = req.user.id;
-    const product_id = req.body.product_id;
+    const product_id = req.params.product_id;
     try {
       await Accounts.findOneAndUpdate(
         {
@@ -97,12 +97,17 @@ class CartsController {
     const phone = req.body.phone;
     const address = req.body.address;
     const carts = req.body.carts;
-    const totalMoney = req.body.totalMoney;
+    const totalMoney = Number(req.body.totalMoney).toLocaleString();
+    let randomCode = (Math.random() + 1)
+      .toString(36)
+      .slice(2, 8)
+      .toLocaleUpperCase();
     try {
       if (!full_name || !email || !phone || carts.length === 0) {
         res.status(403).json("Please provide full information");
       } else {
         const orders = new Orders({
+          orders_code: randomCode,
           user_id: id,
           full_name: full_name,
           orders: carts,
