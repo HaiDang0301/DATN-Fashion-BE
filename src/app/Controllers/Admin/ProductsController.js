@@ -165,33 +165,33 @@ class ProductsController {
       await Products.insertMany(data)
         .then(async (products) => {
           data.map(async (item) => {
-            const result = await cloudinary.uploader.upload(
+            await cloudinary.uploader.upload(
               "https://s2s.co.th/wp-content/uploads/2019/09/photo-icon-Copy-7.jpg",
               {
                 folder: `collections/${item.collections}/${item.name}`,
               }
             );
-            const producers = await Producers.findOneAndUpdate(
+            await Producers.findOneAndUpdate(
               { name: item.producer },
               { $setOnInsert: { name: item.producer } },
               { upsert: true, returnOriginal: false }
             );
-            const colors = await Colors.findOneAndUpdate(
+            await Colors.findOneAndUpdate(
               { colors: item.color },
               { $setOnInsert: { colors: item.color } },
               { upsert: true, returnOriginal: false }
             );
-            const sizes = await Sizes.findOneAndUpdate(
+            await Sizes.findOneAndUpdate(
               { sizes: item.size },
               { $setOnInsert: { sizes: item.size } },
               { upsert: true, returnOriginal: false }
             );
-            const collections = await Collections.findOneAndUpdate(
+            await Collections.findOneAndUpdate(
               { collections: item.collections },
               { $setOnInsert: { collections: item.collections } },
               { upsert: true, returnOriginal: false }
             );
-            const category = await Collections.findOneAndUpdate(
+            await Collections.findOneAndUpdate(
               {
                 collections: item.collections,
                 "categories.category": { $ne: item.category },

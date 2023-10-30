@@ -76,7 +76,7 @@ class CartsController {
   }
   async destroy(req, res, next) {
     const user_id = req.user.id;
-    const product_id = req.body.product_id;
+    const product_id = req.params.id;
     try {
       await Accounts.findOneAndUpdate(
         {
@@ -97,13 +97,20 @@ class CartsController {
     const phone = req.body.phone;
     const address = req.body.address;
     const carts = req.body.carts;
-    const totalMoney = req.body.totalMoney;
+    const totalMoney = Number(req.body.totalMoney).valueOf();
+    let randomCode = (Math.random() + 1)
+      .toString(36)
+      .slice(2, 8)
+      .toLocaleUpperCase();
     try {
       if (!full_name || !email || !phone || carts.length === 0) {
         res.status(403).json("Please provide full information");
       } else {
         const orders = new Orders({
+          orders_code: randomCode,
           user_id: id,
+          phone: phone,
+          full_name: full_name,
           orders: carts,
           totalMoney: totalMoney,
           address: address,
@@ -122,6 +129,7 @@ class CartsController {
           );
       }
     } catch (error) {
+      console.log(error);
       res.status(500).json("Connect Server False");
     }
   }

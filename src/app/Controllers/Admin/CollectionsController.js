@@ -64,7 +64,7 @@ class CollectionController {
     const collection = req.body.collections;
     try {
       if (collection) {
-        const findCollection = await Collections.findOneAndUpdate(
+        await Collections.findOneAndUpdate(
           { _id: req.params.id },
           {
             collections: req.body.collections,
@@ -72,7 +72,7 @@ class CollectionController {
         );
         res.status(200).json("Update Collection Success");
       } else {
-        const category = await Collections.updateOne(
+        await Collections.updateOne(
           {
             _id: req.params.id,
             "categories._id": req.body.idc,
@@ -98,7 +98,7 @@ class CollectionController {
           res.status(200).json("Delete Collection Success");
         });
       } else {
-        const category = await Collections.findByIdAndUpdate(
+        await Collections.findByIdAndUpdate(
           {
             _id: req.params.id,
           },
