@@ -72,7 +72,7 @@ class OrdersController {
   }
   async update(req, res, next) {
     const status = req.body.status;
-    const id = req.body.id;
+    const id = req.params.id;
     const reason = req.body.reason;
     let order = {};
     switch (status) {
@@ -104,6 +104,12 @@ class OrdersController {
   }
   async destroy(req, res, next) {
     const id = req.params.id;
+    try {
+      await Orders.findByIdAndDelete({ _id: id });
+      res.status(200).json("Delete Order Success");
+    } catch (error) {
+      res.status(500).json("Connect Server False");
+    }
   }
 }
 module.exports = new OrdersController();

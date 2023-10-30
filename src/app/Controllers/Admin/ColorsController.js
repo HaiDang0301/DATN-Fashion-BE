@@ -26,7 +26,7 @@ class ColorController {
       const id = req.params.id;
       const findId = await Colors.findById({ _id: id });
       if (findId) {
-        const color = await Colors.findByIdAndUpdate(
+        await Colors.findByIdAndUpdate(
           {
             _id: id,
           },

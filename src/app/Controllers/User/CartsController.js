@@ -76,7 +76,7 @@ class CartsController {
   }
   async destroy(req, res, next) {
     const user_id = req.user.id;
-    const product_id = req.params.product_id;
+    const product_id = req.params.id;
     try {
       await Accounts.findOneAndUpdate(
         {
@@ -109,6 +109,7 @@ class CartsController {
         const orders = new Orders({
           orders_code: randomCode,
           user_id: id,
+          phone: phone,
           full_name: full_name,
           orders: carts,
           totalMoney: totalMoney,

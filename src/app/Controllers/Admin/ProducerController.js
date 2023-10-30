@@ -64,7 +64,7 @@ class ProducerController {
   async update(req, res, next) {
     try {
       const id = req.params.id;
-      const producer = await Producers.findByIdAndUpdate(
+      await Producers.findByIdAndUpdate(
         {
           _id: id,
         },
@@ -90,7 +90,7 @@ class ProducerController {
   async destroy(req, res, next) {
     const id = req.params.id;
     try {
-      const destroy = await Producers.findByIdAndDelete({ _id: id })
+      await Producers.findByIdAndDelete({ _id: id })
         .then((producer) => {
           res.status(200).json("Delete Producer Success");
         })

@@ -87,7 +87,7 @@ class BlogsController {
                 folder: "blogs",
               }
             );
-            const blogs = await Blogs.findByIdAndUpdate(
+            await Blogs.findByIdAndUpdate(
               { _id: id },
               {
                 image: result.url,
@@ -99,7 +99,7 @@ class BlogsController {
             );
             res.status(200).json("Update Blog Success");
           } else {
-            const blogs = await Blogs.findByIdAndUpdate(
+            await Blogs.findByIdAndUpdate(
               { _id: id },
               {
                 image: item.image,
@@ -120,7 +120,7 @@ class BlogsController {
     try {
       const blog = await Blogs.find({ _id: req.params.id });
       blog.map(async (item, index) => {
-        const destroy = await cloudinary.uploader.destroy(item.public_id);
+        await cloudinary.uploader.destroy(item.public_id);
         const id = await Blogs.findOneAndDelete({ _id: req.params.id });
         if (id) {
           res.status(200).json("Delete Blog Success");

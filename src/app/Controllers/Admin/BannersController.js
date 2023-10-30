@@ -86,7 +86,7 @@ class BannerController {
                 folder: "banners",
               }
             );
-            const banners = await Banners.findByIdAndUpdate(
+            await Banners.findByIdAndUpdate(
               { _id: id },
               {
                 image: result.url,
@@ -117,7 +117,7 @@ class BannerController {
     try {
       const banner = await Banners.find({ _id: req.params.id });
       banner.map(async (item, index) => {
-        const destroy = await cloudinary.uploader.destroy(item.public_id);
+        await cloudinary.uploader.destroy(item.public_id);
         const id = await Banners.findOneAndDelete({ _id: req.params.id });
         if (id) {
           res.status(200).json("Delete Banner Success");
