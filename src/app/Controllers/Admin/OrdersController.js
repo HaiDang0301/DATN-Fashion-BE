@@ -1,4 +1,6 @@
 const Orders = require("../../Models/OrdersModel");
+const WareHouse = require("../../Models/WareHouse");
+const Products = require("../../Models/ProductsModel");
 class OrdersController {
   async index(req, res, next) {
     let orders = {};
@@ -96,6 +98,68 @@ class OrdersController {
         break;
     }
     try {
+      let dataUpdateProduct = {};
+      const findOrders = await Orders.findById({ _id: id });
+      findOrders.orders.forEach(async (product) => {
+        await WareHouse.insertMany({
+          product_id: product.product_id,
+          price: product.price,
+          sizes: [
+            {
+              size: product.size,
+              quantity: product.quantity,
+            },
+          ],
+          type: 1,
+        });
+        let sizes = [
+          {
+            size: product.size,
+            quantity: product.quantity,
+          },
+        ];
+        const findProduct = await Products.findById({
+          _id: product.product_id,
+        });
+        findProduct.sizes.map((product) => {
+          sizes.unshift(product);
+        });
+        const result = {};
+        sizes.forEach((obj) => {
+          const { size, quantity } = obj;
+          if (result.hasOwnProperty(size)) {
+            result[size] -= quantity;
+          } else {
+            result[size] = quantity;
+          }
+        });
+        let objsizes = {
+          size: Object.keys(result),
+          quantity: Object.values(result),
+        };
+        let arrSizes = [];
+        for (let i = 0; i < objsizes.size.length; i++) {
+          arrSizes.push({
+            size: objsizes.size[i],
+            quantity: objsizes.quantity[i],
+          });
+          arrSizes.filter(async (size) => {
+            if (size.quantity < 50) {
+              dataUpdateProduct[product.product_id] = {
+                $set: { sizes: arrSizes, status: "Out of Stock" },
+              };
+            } else {
+              dataUpdateProduct[product.product_id] = {
+                $set: { sizes: arrSizes },
+              };
+            }
+          });
+          await Products.findByIdAndUpdate(
+            { _id: product.product_id },
+            dataUpdateProduct
+          );
+        }
+      });
       await Orders.findByIdAndUpdate({ _id: id }, order);
       res.status(200).json("Update Status Order Success");
     } catch (error) {

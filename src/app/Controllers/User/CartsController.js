@@ -97,7 +97,7 @@ class CartsController {
     const phone = req.body.phone;
     const address = req.body.address;
     const carts = req.body.carts;
-    const totalMoney = Number(req.body.totalMoney).toLocaleString();
+    const totalMoney = Number(req.body.totalMoney).valueOf();
     let randomCode = (Math.random() + 1)
       .toString(36)
       .slice(2, 8)
@@ -129,6 +129,7 @@ class CartsController {
           );
       }
     } catch (error) {
+      console.log(error);
       res.status(500).json("Connect Server False");
     }
   }
