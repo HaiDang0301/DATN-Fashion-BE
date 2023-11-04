@@ -254,23 +254,31 @@ class ProductsController {
     const collection = req.body.collections;
     const id = req.params.id;
     const name = req.body.name;
+    const producer = req.body.producer;
+    const collections = req.body.collections;
+    const category = req.body.category;
     const size = req.body.size;
     const quantity = req.body.quantity;
+    const importPrice = req.body.importPrice;
+    const color = req.body.color;
     const arrSizes = [];
     const urls = [];
     const fileUpload = req.files;
     const promotion = req.body.promotion;
+    const out_of_promotion = req.body.out_of_promotion;
+    const description = req.body.description;
     let price = 0;
+    let sumMoney = 0;
     let dataProducts = {
-      name: req.body.name,
-      collections: req.body.collections,
-      promotion: req.body.promotion,
-      out_of_promotion: req.body.out_of_promotion,
-      category: req.body.category,
-      color: req.body.color,
-      importPrice: req.body.importPrice,
-      producer: req.body.producer,
-      description: req.body.description,
+      name: name,
+      collections: collections,
+      promotion: promotion,
+      out_of_promotion: out_of_promotion,
+      category: category,
+      color: color,
+      importPrice: importPrice,
+      producer: producer,
+      description: description,
     };
     if (typeof size === "object") {
       for (let i = 0; i < size.length; i++) {
@@ -443,18 +451,78 @@ class ProductsController {
       const removeSizeZero = sizes.filter((item) => {
         return item.quantity != 0;
       });
+      removeSizeZero.forEach((data) => {
+        sumMoney += data.quantity * importPrice;
+      });
       if (removeSizeZero.length > 0) {
-        const addwarehouse = new WareHouse({
+        let dataImport = {
           product_id: id,
+          product_name: name,
           price: req.body.importPrice,
           sizes: removeSizeZero,
           type: 0,
-        });
-        await addwarehouse.save();
+          totalMoney: sumMoney,
+          createdAt: Date.now(),
+        };
+        let month = new Date().getMonth() + 1;
+        if (month === 13) month = "01";
+        if (month.length < 2) month = "0" + month;
+        const findYear = await WareHouse.findOne({});
+        if (!findYear || findYear.years != new Date().getFullYear()) {
+          const addwarehouse = new WareHouse({
+            years: new Date().getFullYear(),
+            months: [
+              {
+                month: month,
+                data: dataImport,
+                import_Money: sumMoney,
+              },
+            ],
+          });
+          await addwarehouse.save();
+        } else {
+          const findMonth = await WareHouse.findOne({
+            years: new Date().getFullYear(),
+            months: { $elemMatch: { month: month } },
+          });
+          if (findMonth) {
+            await WareHouse.findOneAndUpdate(
+              {
+                years: new Date().getFullYear(),
+                months: { $elemMatch: { month: month } },
+              },
+              {
+                $push: {
+                  "months.$.data": dataImport,
+                },
+                $inc: {
+                  "months.$.import_Money": sumMoney,
+                },
+              }
+            );
+          } else {
+            await WareHouse.updateOne(
+              {
+                years: new Date().getFullYear(),
+              },
+              {
+                $addToSet: {
+                  months: {
+                    month: month,
+                    data: dataImport,
+                    import_Money: sumMoney,
+                  },
+                },
+              },
+              { upsert: true }
+            );
+          }
+        }
       }
       await Products.findByIdAndUpdate({ _id: id }, dataProducts);
       res.status(200).json("Update Products Sucesss");
     } catch (error) {
+      console.log(error);
       return res.status(500).json("Connect Server False");
     }
   }

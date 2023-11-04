@@ -36,7 +36,7 @@ const Product = new Schema(
     ],
     out_of_promotion: { type: Date, default: Date.now() },
     slug: { type: String, slug: "name" },
-    status: { type: String, default: "Stocking" },
+    status: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

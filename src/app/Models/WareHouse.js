@@ -2,28 +2,27 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const WareHouse = new Schema(
   {
-    years: [
+    years: { type: String },
+    months: [
       {
-        year: { type: Date },
-        months: [
+        month: { type: String },
+        data: [
           {
-            month: { type: Date },
-            data: [
+            product_id: { type: String },
+            product_name: { type: String },
+            price: { type: Number },
+            sizes: [
               {
-                product_id: { type: String },
-                price: { type: Number },
-                sizes: [
-                  {
-                    size: { type: String },
-                    quantity: { type: Number },
-                  },
-                ],
-                type: { type: String },
+                size: { type: String },
+                quantity: { type: Number },
               },
             ],
+            type: { type: Number },
             totalMoney: { type: Number },
           },
         ],
+        import_Money: { type: Number, default: 0 },
+        sales_Money: { type: Number, default: 0 },
       },
     ],
   },
