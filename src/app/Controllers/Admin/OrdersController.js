@@ -105,6 +105,7 @@ class OrdersController {
             sumMoney += product.quantity * product.price;
             dataImport = {
               product_id: product.product_id,
+              product_name: product.product_name,
               price: product.price,
               sizes: [
                 {
@@ -112,6 +113,7 @@ class OrdersController {
                   quantity: product.quantity,
                 },
               ],
+              createdAt: Date.now(),
               type: 1,
               totalMoney: sumMoney,
             };

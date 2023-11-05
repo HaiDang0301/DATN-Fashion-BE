@@ -18,6 +18,7 @@ const WareHouse = new Schema(
               },
             ],
             type: { type: Number },
+            createdAt: { type: Date },
             totalMoney: { type: Number },
           },
         ],
