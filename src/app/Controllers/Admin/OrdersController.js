@@ -94,72 +94,117 @@ class OrdersController {
             status_delivery: "Successful Delivery",
             status_payment: true,
           };
+          let dataUpdateProduct = {};
+          let sumMoney = 0;
+          let dataImport = {};
+          let month = new Date().getMonth() + 1;
+          if (month === 13) month = "01";
+          if (month.length < 2) month = "0" + month;
+          const findOrders = await Orders.findById({ _id: id });
+          findOrders.orders.forEach(async (product) => {
+            sumMoney += product.quantity * product.price;
+            dataImport = {
+              product_id: product.product_id,
+              product_name: product.product_name,
+              price: product.price,
+              sizes: [
+                {
+                  size: product.size,
+                  quantity: product.quantity,
+                },
+              ],
+              createdAt: Date.now(),
+              type: 1,
+              totalMoney: sumMoney,
+            };
+            const findMonth = await WareHouse.findOne({
+              years: new Date().getFullYear(),
+              months: { $elemMatch: { month: month } },
+            });
+            if (findMonth) {
+              await WareHouse.findOneAndUpdate(
+                {
+                  years: new Date().getFullYear(),
+                  months: { $elemMatch: { month: month } },
+                },
+                {
+                  $push: {
+                    "months.$.data": dataImport,
+                  },
+                  $inc: {
+                    "months.$.sales_Money": sumMoney,
+                  },
+                }
+              );
+            } else {
+              await WareHouse.findOneAndUpdate(
+                {
+                  years: new Date().getFullYear(),
+                },
+                {
+                  $addToSet: {
+                    months: {
+                      month: month,
+                      data: dataImport,
+                      sales_Money: sumMoney,
+                    },
+                  },
+                },
+                { upsert: true }
+              );
+            }
+            let sizes = [
+              {
+                size: product.size,
+                quantity: product.quantity,
+              },
+            ];
+            const findProduct = await Products.findById({
+              _id: product.product_id,
+            });
+            findProduct.sizes.map((product) => {
+              sizes.unshift(product);
+            });
+            const result = {};
+            sizes.forEach((obj) => {
+              const { size, quantity } = obj;
+              if (result.hasOwnProperty(size)) {
+                result[size] -= quantity;
+              } else {
+                result[size] = quantity;
+              }
+            });
+            let objsizes = {
+              size: Object.keys(result),
+              quantity: Object.values(result),
+            };
+            let arrSizes = [];
+            for (let i = 0; i < objsizes.size.length; i++) {
+              arrSizes.push({
+                size: objsizes.size[i],
+                quantity: objsizes.quantity[i],
+              });
+              arrSizes.filter(async (size) => {
+                if (size.quantity < 50) {
+                  dataUpdateProduct = {
+                    $set: { sizes: arrSizes, status: 1 },
+                  };
+                } else {
+                  dataUpdateProduct = {
+                    $set: { sizes: arrSizes },
+                  };
+                }
+              });
+              await Products.findByIdAndUpdate(
+                { _id: product.product_id },
+                dataUpdateProduct
+              );
+            }
+          });
         }
         break;
     }
     try {
-      let dataUpdateProduct = {};
-      const findOrders = await Orders.findById({ _id: id });
-      findOrders.orders.forEach(async (product) => {
-        await WareHouse.insertMany({
-          product_id: product.product_id,
-          price: product.price,
-          sizes: [
-            {
-              size: product.size,
-              quantity: product.quantity,
-            },
-          ],
-          type: 1,
-        });
-        let sizes = [
-          {
-            size: product.size,
-            quantity: product.quantity,
-          },
-        ];
-        const findProduct = await Products.findById({
-          _id: product.product_id,
-        });
-        findProduct.sizes.map((product) => {
-          sizes.unshift(product);
-        });
-        const result = {};
-        sizes.forEach((obj) => {
-          const { size, quantity } = obj;
-          if (result.hasOwnProperty(size)) {
-            result[size] -= quantity;
-          } else {
-            result[size] = quantity;
-          }
-        });
-        let objsizes = {
-          size: Object.keys(result),
-          quantity: Object.values(result),
-        };
-        let arrSizes = [];
-        for (let i = 0; i < objsizes.size.length; i++) {
-          arrSizes.push({
-            size: objsizes.size[i],
-            quantity: objsizes.quantity[i],
-          });
-          arrSizes.filter(async (size) => {
-            if (size.quantity < 50) {
-              dataUpdateProduct[product.product_id] = {
-                $set: { sizes: arrSizes, status: "Out of Stock" },
-              };
-            } else {
-              dataUpdateProduct[product.product_id] = {
-                $set: { sizes: arrSizes },
-              };
-            }
-          });
-          await Products.findByIdAndUpdate(
-            { _id: product.product_id },
-            dataUpdateProduct
-          );
-        }
-      });
       await Orders.findByIdAndUpdate({ _id: id }, order);
       res.status(200).json("Update Status Order Success");
     } catch (error) {

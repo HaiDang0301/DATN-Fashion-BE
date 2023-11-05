@@ -2,7 +2,7 @@ const express = require("express");
 const producer = require("../../app/Controllers/Admin/ProducerController");
 const Middleware = require("../../middleware/Middleware");
 const router = express.Router();
-router.get("/api/admin/producers", Middleware.Admin, producer.index);
+router.get("/api/admin/producers", producer.index);
 router.post("/api/admin/producers", Middleware.Admin, producer.store);
 router.get("/api/admin/producers/:id/edit", Middleware.Admin, producer.edit);
 router.put("/api/admin/producers/:id", Middleware.Admin, producer.update);
