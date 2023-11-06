@@ -76,6 +76,7 @@ class StatisticalController {
       const paginateData = paginate(dataDetails, limit);
       res.status(200).json({ dataWareHouse, findMonth, paginateData });
     } catch (error) {
+      console.log(error);
       res.status(500).json("Connect Server Errors");
     }
   }

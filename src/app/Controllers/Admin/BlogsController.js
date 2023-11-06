@@ -34,26 +34,25 @@ class BlogsController {
     }
   }
   async store(req, res, next) {
+    const title = await Blogs.findOne({ title: req.body.title });
+    if (title) {
+      res.status(409).json("The Blogs Has Existed");
+    }
     try {
-      const title = await Blogs.findOne({ title: req.body.title });
-      if (title) {
-        res.status(409).json("The Blogs Has Existed");
-      } else {
-        const fileUpload = req.files.image;
-        const result = await cloudinary.uploader.upload(
-          fileUpload.tempFilePath,
-          { folder: "blogs" }
-        );
-        const blogs = await new Blogs({
-          image: result.url,
-          public_id: result.public_id,
-          title: req.body.title,
-          author: req.body.author,
-          description: req.body.description,
-        });
-        blogs.save();
-        res.status(200).json("Add Blog Success");
-      }
+      const fileUpload = req.files.image;
+      const result = await cloudinary.uploader.upload(fileUpload.tempFilePath, {
+        folder: "blogs",
+      });
+      const blogs = new Blogs({
+        image: result.url,
+        public_id: result.public_id,
+        title: req.body.title,
+        author: req.body.author,
+        hashtag: req.body.hashtag,
+        description: req.body.description,
+      });
+      blogs.save();
+      res.status(200).json("Add Blog Success");
     } catch (error) {
       res.status(500).json("Connect Server False");
     }
@@ -94,6 +93,7 @@ class BlogsController {
                 public_id: result.public_id,
                 title: req.body.title,
                 author: req.body.author,
+                hashtag: req.body.hashtag,
                 description: req.body.description,
               }
             );

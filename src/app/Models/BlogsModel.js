@@ -8,6 +8,7 @@ const Blogs = new Schema(
     title: { type: String, required: true },
     public_id: { type: String, required: true },
     author: { type: String, min: 6, max: 20, required: true },
+    hashtag: { type: String },
     description: { type: String, required: true },
     slug: { type: String, slug: "title" },
   },

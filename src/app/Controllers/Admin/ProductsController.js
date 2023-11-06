@@ -20,14 +20,14 @@ class ProductsController {
     const limit = 9;
     let bySort = { createdAt: "desc" };
     const page = req.query.page;
-    const name = req.query.name;
+    const product_code = req.query.product_code;
     const collection = req.query.collection;
     const producer = req.query.producer;
     const price = req.query.price;
     const countProducts = await Products.countDocuments();
     var totalPage = Math.ceil(countProducts / limit);
-    if (name) {
-      cateria = { name: { $regex: name } };
+    if (product_code) {
+      cateria = { productCode: { $regex: product_code } };
       const countProducts = await Products.find(cateria).countDocuments();
       totalPage = Math.ceil(countProducts / limit);
     }
@@ -87,7 +87,7 @@ class ProductsController {
     }
     const findName = await Products.findOne({ name: name });
     if (findName) {
-      res.status(500).json("Products Already Exist");
+      res.status(409).json("Products has existed");
     } else {
       const urls = [];
       const productCode = req.body.productCode;
@@ -134,13 +134,73 @@ class ProductsController {
         try {
           const product = new Products(dataProduct);
           await product.save();
-          const addNew = new WareHouse({
+          let sumMoney = 0;
+          let dataImport = {
             product_id: product.id,
+            product_name: name,
             price: req.body.importPrice,
             sizes: arrSizes,
             type: 0,
+            totalMoney: sumMoney,
+            createdAt: Date.now(),
+          };
+          let month = new Date().getMonth() + 1;
+          if (month === 13) month = "01";
+          if (month.length < 2) month = "0" + month;
+          arrSizes.forEach((data) => {
+            sumMoney += data.quantity * req.body.importPrice;
           });
-          await addNew.save();
+          const findYear = await WareHouse.findOne({});
+          if (!findYear || findYear.years != new Date().getFullYear()) {
+            const addwarehouse = new WareHouse({
+              years: new Date().getFullYear(),
+              months: [
+                {
+                  month: month,
+                  data: dataImport,
+                  import_Money: sumMoney,
+                },
+              ],
+            });
+            await addwarehouse.save();
+          } else {
+            const findMonth = await WareHouse.findOne({
+              years: new Date().getFullYear(),
+              months: { $elemMatch: { month: month } },
+            });
+            if (findMonth) {
+              await WareHouse.findOneAndUpdate(
+                {
+                  years: new Date().getFullYear(),
+                  months: { $elemMatch: { month: month } },
+                },
+                {
+                  $push: {
+                    "months.$.data": dataImport,
+                  },
+                  $inc: {
+                    "months.$.import_Money": sumMoney,
+                  },
+                }
+              );
+            } else {
+              await WareHouse.updateOne(
+                {
+                  years: new Date().getFullYear(),
+                },
+                {
+                  $addToSet: {
+                    months: {
+                      month: month,
+                      data: dataImport,
+                      import_Money: sumMoney,
+                    },
+                  },
+                },
+                { upsert: true }
+              );
+            }
+          }
           res.status(200).json("Add product success");
         } catch (error) {
           res.status(500).json("Connect Server Errors");
@@ -196,7 +256,7 @@ class ProductsController {
                 },
               }
             );
-            const addSizes = await Products.findOneAndUpdate(
+            const product = await Products.findOneAndUpdate(
               {
                 name: item.name,
                 "sizes.zise": { $ne: item.size },
@@ -210,19 +270,73 @@ class ProductsController {
                 },
               }
             );
-            await WareHouse.insertMany([
-              {
-                product_id: addSizes._id,
-                price: item.importPrice,
-                sizes: [
+            let sumMoney = item.quantity * product.importPrice;
+            let dataImport = {
+              product_id: product.id,
+              product_name: product.name,
+              price: product.importPrice,
+              sizes: {
+                size: item.size,
+                quantity: item.quantity,
+              },
+              type: 0,
+              totalMoney: sumMoney,
+              createdAt: Date.now(),
+            };
+            let month = new Date().getMonth() + 1;
+            if (month === 13) month = "01";
+            if (month.length < 2) month = "0" + month;
+            const findYear = await WareHouse.findOne({});
+            if (!findYear || findYear.years != new Date().getFullYear()) {
+              const addwarehouse = new WareHouse({
+                years: new Date().getFullYear(),
+                months: [
                   {
-                    size: item.size,
-                    quantity: item.quantity,
+                    month: month,
+                    data: dataImport,
+                    import_Money: sumMoney,
                   },
                 ],
-                type: 0,
-              },
-            ]);
+              });
+              await addwarehouse.save();
+            } else {
+              const findMonth = await WareHouse.findOne({
+                years: new Date().getFullYear(),
+                months: { $elemMatch: { month: month } },
+              });
+              if (findMonth) {
+                await WareHouse.findOneAndUpdate(
+                  {
+                    years: new Date().getFullYear(),
+                    months: { $elemMatch: { month: month } },
+                  },
+                  {
+                    $push: {
+                      "months.$.data": dataImport,
+                    },
+                    $inc: {
+                      "months.$.import_Money": sumMoney,
+                    },
+                  }
+                );
+              } else {
+                await WareHouse.updateOne(
+                  {
+                    years: new Date().getFullYear(),
+                  },
+                  {
+                    $addToSet: {
+                      months: {
+                        month: month,
+                        data: dataImport,
+                        import_Money: sumMoney,
+                      },
+                    },
+                  },
+                  { upsert: true }
+                );
+              }
+            }
           });
           res.status(200).json("Add Product List Success");
         })
@@ -522,7 +636,6 @@ class ProductsController {
       await Products.findByIdAndUpdate({ _id: id }, dataProducts);
       res.status(200).json("Update Products Sucesss");
     } catch (error) {
-      console.log(error);
       return res.status(500).json("Connect Server False");
     }
   }
