@@ -95,15 +95,13 @@ class OrdersController {
             status_payment: true,
           };
           let dataUpdateProduct = {};
-          let sumMoney = 0;
-          let dataImport = {};
+          let dataImport = [];
           let month = new Date().getMonth() + 1;
           if (month === 13) month = "01";
           if (month.length < 2) month = "0" + month;
           const findOrders = await Orders.findById({ _id: id });
           findOrders.orders.forEach(async (product) => {
-            sumMoney += product.quantity * product.price;
-            dataImport = {
+            dataImport.push({
               product_id: product.product_id,
               product_name: product.product_name,
               price: product.price,
@@ -115,44 +113,44 @@ class OrdersController {
               ],
               createdAt: Date.now(),
               type: 1,
-              totalMoney: sumMoney,
-            };
-            const findMonth = await WareHouse.findOne({
-              years: new Date().getFullYear(),
-              months: { $elemMatch: { month: month } },
+              totalMoney: findOrders.totalMoney,
             });
-            if (findMonth) {
-              await WareHouse.findOneAndUpdate(
-                {
-                  years: new Date().getFullYear(),
-                  months: { $elemMatch: { month: month } },
-                },
-                {
-                  $push: {
-                    "months.$.data": dataImport,
-                  },
-                  $inc: {
-                    "months.$.sales_Money": sumMoney,
-                  },
-                }
-              );
-            } else {
-              await WareHouse.findOneAndUpdate(
-                {
-                  years: new Date().getFullYear(),
-                },
-                {
-                  $addToSet: {
-                    months: {
-                      month: month,
-                      data: dataImport,
-                      sales_Money: sumMoney,
-                    },
-                  },
-                },
-                { upsert: true }
-              );
-            }
+            // const findMonth = await WareHouse.findOne({
+            //   years: new Date().getFullYear(),
+            //   months: { $elemMatch: { month: month } },
+            // });
+            // if (findMonth) {
+            //   await WareHouse.findOneAndUpdate(
+            //     {
+            //       years: new Date().getFullYear(),
+            //       months: { $elemMatch: { month: month } },
+            //     },
+            //     {
+            //       $push: {
+            //         "months.$.data": dataImport,
+            //       },
+            //       $inc: {
+            //         "months.$.sales_Money": findOrders.totalMoney,
+            //       },
+            //     }
+            //   );
+            // } else {
+            //   await WareHouse.findOneAndUpdate(
+            //     {
+            //       years: new Date().getFullYear(),
+            //     },
+            //     {
+            //       $addToSet: {
+            //         months: {
+            //           month: month,
+            //           data: dataImport,
+            //           sales_Money: findOrders.totalMoney,
+            //         },
+            //       },
+            //     },
+            //     { upsert: true }
+            //   );
+            // }
             let sizes = [
               {
                 size: product.size,
@@ -198,6 +196,45 @@ class OrdersController {
               await Products.findByIdAndUpdate(
                 { _id: product.product_id },
                 dataUpdateProduct
+              );
+            }
+          });
+          dataImport.map(async (data) => {
+            const findMonth = await WareHouse.findOne({
+              years: new Date().getFullYear(),
+              months: { $elemMatch: { month: month } },
+            });
+            if (findMonth) {
+              await WareHouse.findOneAndUpdate(
+                {
+                  years: new Date().getFullYear(),
+                  months: { $elemMatch: { month: month } },
+                },
+                {
+                  $push: {
+                    "months.$.data": data,
+                  },
+                  $inc: {
+                    "months.$.sales_Money":
+                      findOrders.totalMoney / dataImport.length,
+                  },
+                }
+              );
+            } else {
+              await WareHouse.findOneAndUpdate(
+                {
+                  years: new Date().getFullYear(),
+                },
+                {
+                  $addToSet: {
+                    months: {
+                      month: month,
+                      data: data,
+                      sales_Money: findOrders.totalMoney,
+                    },
+                  },
+                },
+                { upsert: true }
               );
             }
           });

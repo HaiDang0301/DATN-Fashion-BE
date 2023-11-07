@@ -87,12 +87,12 @@ class AccountsController {
   async newsletter(req, res, next) {
     const email = req.body.email;
     try {
-      await Accounts.findOne({ email: email });
-      if (email) {
+      const findEmail = await Accounts.findOne({ email: email });
+      if (findEmail) {
         await Accounts.findOneAndUpdate({ email: email }, { registered: true });
         res.status(200).json("Subscribe newsletter");
       }
-      if (!email) {
+      if (!findEmail) {
         res.status(404).json("Please check out your email");
       }
     } catch (error) {

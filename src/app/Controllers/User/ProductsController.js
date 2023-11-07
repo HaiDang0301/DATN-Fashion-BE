@@ -66,7 +66,19 @@ class ProductsController {
         break;
     }
     if (producer) {
-      cateria = { producer: producer };
+      if (category) {
+        cateria = {
+          $and: [
+            { collections: type },
+            { category: category },
+            { producer: producer },
+          ],
+        };
+      } else {
+        cateria = {
+          producer: producer,
+        };
+      }
       const countDoc = await Products.find(cateria).countDocuments();
       totalPage = Math.ceil(countDoc / limit);
     }

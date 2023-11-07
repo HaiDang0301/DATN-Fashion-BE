@@ -79,7 +79,7 @@ class BlogsController {
         findBlogs.map(async (item, index) => {
           const image = req.files;
           if (image) {
-            const destroy = await cloudinary.uploader.destroy(item.public_id);
+            await cloudinary.uploader.destroy(item.public_id);
             const result = await cloudinary.uploader.upload(
               image.image.tempFilePath,
               {
@@ -105,6 +105,7 @@ class BlogsController {
                 image: item.image,
                 title: req.body.title,
                 author: req.body.author,
+                hashtag: req.body.hashtag,
                 description: req.body.description,
               }
             );

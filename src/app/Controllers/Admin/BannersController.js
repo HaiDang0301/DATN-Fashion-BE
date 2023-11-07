@@ -44,7 +44,7 @@ class BannerController {
           fileUpload.tempFilePath,
           { folder: "banners" }
         );
-        const banners = await new Banners({
+        const banners = new Banners({
           image: result.url,
           public_id: result.public_id,
           title: req.body.title,
@@ -79,7 +79,7 @@ class BannerController {
         findBanners.map(async (item, index) => {
           const image = req.files;
           if (image) {
-            const destroy = await cloudinary.uploader.destroy(item.public_id);
+            await cloudinary.uploader.destroy(item.public_id);
             const result = await cloudinary.uploader.upload(
               image.image.tempFilePath,
               {
