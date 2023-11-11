@@ -57,7 +57,7 @@ class ProductsController {
         .sort(bySort)
         .skip((page - 1) * limit)
         .limit(limit);
-      res.status(200).json({ products, totalPage });
+      res.status(200).json({ products, totalPage, countProducts });
     } catch (error) {
       res.status(500).json("Connect Server False");
     }

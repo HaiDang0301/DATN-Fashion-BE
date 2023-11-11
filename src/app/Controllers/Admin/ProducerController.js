@@ -4,15 +4,15 @@ class ProducerController {
     const status = req.query.status;
     const page = req.query.page;
     const limit = 9;
-    const countPage = await Producers.countDocuments();
-    let totalPage = Math.ceil(countPage / limit);
+    const countProducers = await Producers.countDocuments();
+    let totalPage = Math.ceil(countProducers / limit);
     if (status) {
       if (status === "default") {
         var cateria = {};
       } else {
         cateria = { status: status };
-        const countPage = await Producers.find(cateria).countDocuments();
-        totalPage = Math.ceil(countPage / limit);
+        const countProducers = await Producers.find(cateria).countDocuments();
+        totalPage = Math.ceil(countProducers / limit);
       }
     }
     try {
@@ -20,7 +20,7 @@ class ProducerController {
         .skip((page - 1) * limit)
         .limit(limit)
         .sort({ createdAt: "desc" });
-      res.json({ producers, totalPage });
+      res.json({ producers, totalPage, countProducers });
     } catch (error) {
       res.status(500).json("Connect Server False");
     }

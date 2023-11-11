@@ -12,23 +12,23 @@ class BlogsController {
     let cateria = {};
     const limit = 12;
     const page = req.query.page;
-    const countPage = await Blogs.countDocuments();
-    let totalPage = Math.ceil(countPage / limit);
+    const countBlogs = await Blogs.countDocuments();
+    let totalPage = Math.ceil(countBlogs / limit);
     const begin = req.query.begin;
     const final = req.query.final;
     if (begin && final) {
       cateria = {
         createdAt: { $gte: new Date(begin), $lte: new Date(final) },
       };
-      const countPage = await Blogs.find(cateria).countDocuments();
-      totalPage = Math.ceil(countPage / limit);
+      const countBlogs = await Blogs.find(cateria).countDocuments();
+      totalPage = Math.ceil(countBlogs / limit);
     }
     try {
       const blogs = await Blogs.find(cateria)
         .skip((page - 1) * limit)
         .limit(limit)
         .sort({ createdAt: "desc" });
-      res.status(200).json({ blogs, totalPage });
+      res.status(200).json({ blogs, totalPage, countBlogs });
     } catch (error) {
       res.status(500).json("Connect Sever False");
     }
