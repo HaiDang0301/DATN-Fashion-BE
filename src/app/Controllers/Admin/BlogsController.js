@@ -12,48 +12,47 @@ class BlogsController {
     let cateria = {};
     const limit = 12;
     const page = req.query.page;
-    const countPage = await Blogs.countDocuments();
-    let totalPage = Math.ceil(countPage / limit);
+    const countBlogs = await Blogs.countDocuments();
+    let totalPage = Math.ceil(countBlogs / limit);
     const begin = req.query.begin;
     const final = req.query.final;
     if (begin && final) {
       cateria = {
         createdAt: { $gte: new Date(begin), $lte: new Date(final) },
       };
-      const countPage = await Blogs.find(cateria).countDocuments();
-      totalPage = Math.ceil(countPage / limit);
+      const countBlogs = await Blogs.find(cateria).countDocuments();
+      totalPage = Math.ceil(countBlogs / limit);
     }
     try {
       const blogs = await Blogs.find(cateria)
         .skip((page - 1) * limit)
         .limit(limit)
         .sort({ createdAt: "desc" });
-      res.status(200).json({ blogs, totalPage });
+      res.status(200).json({ blogs, totalPage, countBlogs });
     } catch (error) {
       res.status(500).json("Connect Sever False");
     }
   }
   async store(req, res, next) {
+    const title = await Blogs.findOne({ title: req.body.title });
+    if (title) {
+      res.status(409).json("The Blogs Has Existed");
+    }
     try {
-      const title = await Blogs.findOne({ title: req.body.title });
-      if (title) {
-        res.status(409).json("The Blogs Has Existed");
-      } else {
-        const fileUpload = req.files.image;
-        const result = await cloudinary.uploader.upload(
-          fileUpload.tempFilePath,
-          { folder: "blogs" }
-        );
-        const blogs = await new Blogs({
-          image: result.url,
-          public_id: result.public_id,
-          title: req.body.title,
-          author: req.body.author,
-          description: req.body.description,
-        });
-        blogs.save();
-        res.status(200).json("Add Blog Success");
-      }
+      const fileUpload = req.files.image;
+      const result = await cloudinary.uploader.upload(fileUpload.tempFilePath, {
+        folder: "blogs",
+      });
+      const blogs = new Blogs({
+        image: result.url,
+        public_id: result.public_id,
+        title: req.body.title,
+        author: req.body.author,
+        hashtag: req.body.hashtag,
+        description: req.body.description,
+      });
+      blogs.save();
+      res.status(200).json("Add Blog Success");
     } catch (error) {
       res.status(500).json("Connect Server False");
     }
@@ -80,7 +79,7 @@ class BlogsController {
         findBlogs.map(async (item, index) => {
           const image = req.files;
           if (image) {
-            const destroy = await cloudinary.uploader.destroy(item.public_id);
+            await cloudinary.uploader.destroy(item.public_id);
             const result = await cloudinary.uploader.upload(
               image.image.tempFilePath,
               {
@@ -94,6 +93,7 @@ class BlogsController {
                 public_id: result.public_id,
                 title: req.body.title,
                 author: req.body.author,
+                hashtag: req.body.hashtag,
                 description: req.body.description,
               }
             );
@@ -105,6 +105,7 @@ class BlogsController {
                 image: item.image,
                 title: req.body.title,
                 author: req.body.author,
+                hashtag: req.body.hashtag,
                 description: req.body.description,
               }
             );

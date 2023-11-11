@@ -8,8 +8,8 @@ class OrdersController {
     let bySort = { createdAt: "desc" };
     const limit = 9;
     const page = req.query.page;
-    let countPage = await Orders.countDocuments();
-    let totalPage = Math.ceil(countPage / limit);
+    let countOrders = await Orders.countDocuments();
+    let totalPage = Math.ceil(countOrders / limit);
     const query = req.query.sort;
     const begin = req.query.begin;
     const final = req.query.final;
@@ -20,23 +20,23 @@ class OrdersController {
       case query:
         if (query === "pending") {
           orders = { status_delivery: "Pending" };
-          const countPage = await Orders.find(orders).countDocuments();
-          totalPage = Math.ceil(countPage / limit);
+          const countOrders = await Orders.find(orders).countDocuments();
+          totalPage = Math.ceil(countOrders / limit);
         }
         if (query === "delivery") {
           orders = { status_delivery: "Delivery" };
-          const countPage = await Orders.find(orders).countDocuments();
-          totalPage = Math.ceil(countPage / limit);
+          const countOrders = await Orders.find(orders).countDocuments();
+          totalPage = Math.ceil(countOrders / limit);
         }
         if (query === "cancel") {
           orders = { status_delivery: "Cancel" };
-          const countPage = await Orders.find(orders).countDocuments();
-          totalPage = Math.ceil(countPage / limit);
+          const countOrders = await Orders.find(orders).countDocuments();
+          totalPage = Math.ceil(countOrders / limit);
         }
         if (query === "delivered") {
           orders = { status_delivery: "Successful Delivery" };
-          const countPage = await Orders.find(orders).countDocuments();
-          totalPage = Math.ceil(countPage / limit);
+          const countOrders = await Orders.find(orders).countDocuments();
+          totalPage = Math.ceil(countOrders / limit);
         }
         if (query === "decrease") {
           bySort = { totalMoney: "desc" };
@@ -50,15 +50,15 @@ class OrdersController {
       orders = {
         createdAt: { $gte: new Date(begin), $lte: new Date(final) },
       };
-      const countPage = await Orders.find(orders).countDocuments();
-      totalPage = Math.ceil(countPage / limit);
+      const countOrders = await Orders.find(orders).countDocuments();
+      totalPage = Math.ceil(countOrders / limit);
     }
     try {
       const findOrders = await Orders.find(orders)
         .sort(bySort)
         .skip((page - 1) * limit)
         .limit(limit);
-      res.status(200).json({ findOrders, totalPage });
+      res.status(200).json({ findOrders, totalPage, countOrders });
     } catch (error) {
       res.status(500).json("Connect Server False");
     }
@@ -95,15 +95,13 @@ class OrdersController {
             status_payment: true,
           };
           let dataUpdateProduct = {};
-          let sumMoney = 0;
-          let dataImport = {};
+          let dataImport = [];
           let month = new Date().getMonth() + 1;
           if (month === 13) month = "01";
           if (month.length < 2) month = "0" + month;
           const findOrders = await Orders.findById({ _id: id });
           findOrders.orders.forEach(async (product) => {
-            sumMoney += product.quantity * product.price;
-            dataImport = {
+            dataImport.push({
               product_id: product.product_id,
               product_name: product.product_name,
               price: product.price,
@@ -115,44 +113,8 @@ class OrdersController {
               ],
               createdAt: Date.now(),
               type: 1,
-              totalMoney: sumMoney,
-            };
-            const findMonth = await WareHouse.findOne({
-              years: new Date().getFullYear(),
-              months: { $elemMatch: { month: month } },
+              totalMoney: findOrders.totalMoney,
             });
-            if (findMonth) {
-              await WareHouse.findOneAndUpdate(
-                {
-                  years: new Date().getFullYear(),
-                  months: { $elemMatch: { month: month } },
-                },
-                {
-                  $push: {
-                    "months.$.data": dataImport,
-                  },
-                  $inc: {
-                    "months.$.sales_Money": sumMoney,
-                  },
-                }
-              );
-            } else {
-              await WareHouse.findOneAndUpdate(
-                {
-                  years: new Date().getFullYear(),
-                },
-                {
-                  $addToSet: {
-                    months: {
-                      month: month,
-                      data: dataImport,
-                      sales_Money: sumMoney,
-                    },
-                  },
-                },
-                { upsert: true }
-              );
-            }
             let sizes = [
               {
                 size: product.size,
@@ -198,6 +160,45 @@ class OrdersController {
               await Products.findByIdAndUpdate(
                 { _id: product.product_id },
                 dataUpdateProduct
+              );
+            }
+          });
+          dataImport.map(async (data) => {
+            const findMonth = await WareHouse.findOne({
+              years: new Date().getFullYear(),
+              months: { $elemMatch: { month: month } },
+            });
+            if (findMonth) {
+              await WareHouse.findOneAndUpdate(
+                {
+                  years: new Date().getFullYear(),
+                  months: { $elemMatch: { month: month } },
+                },
+                {
+                  $push: {
+                    "months.$.data": data,
+                  },
+                  $inc: {
+                    "months.$.sales_Money":
+                      findOrders.totalMoney / dataImport.length,
+                  },
+                }
+              );
+            } else {
+              await WareHouse.findOneAndUpdate(
+                {
+                  years: new Date().getFullYear(),
+                },
+                {
+                  $addToSet: {
+                    months: {
+                      month: month,
+                      data: data,
+                      sales_Money: findOrders.totalMoney,
+                    },
+                  },
+                },
+                { upsert: true }
               );
             }
           });

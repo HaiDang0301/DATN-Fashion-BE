@@ -14,16 +14,17 @@ class BlogsUserController {
       totalPage = Math.ceil(countPage / limit);
     }
     if (hashtag) {
-      cateria = { title: { $regex: hashtag } };
+      cateria = { hashtag: { $regex: hashtag } };
       const countPage = await Blogs.find(cateria).countDocuments();
       totalPage = Math.ceil(countPage / limit);
     }
     try {
+      const hashtag = await Blogs.distinct("hashtag");
       const blogs = await Blogs.find(cateria)
         .skip((page - 1) * limit)
         .limit(limit)
         .sort({ createdAt: "desc" });
-      res.status(200).json({ blogs, totalPage });
+      res.status(200).json({ blogs, hashtag, totalPage });
     } catch (error) {
       res.status(500).json("Connect Sever False");
     }

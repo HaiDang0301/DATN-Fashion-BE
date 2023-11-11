@@ -74,8 +74,11 @@ class StatisticalController {
         }
       });
       const paginateData = paginate(dataDetails, limit);
-      res.status(200).json({ dataWareHouse, findMonth, paginateData });
+      res
+        .status(200)
+        .json({ dataWareHouse, findMonth, paginateData, dataDetails });
     } catch (error) {
+      console.log(error);
       res.status(500).json("Connect Server Errors");
     }
   }

@@ -3,6 +3,7 @@ const AdminStatistical = require("./Admin/statistical");
 const AdminCollection = require("./Admin/collections");
 const AdminBlogs = require("./Admin/blogs");
 const AdminOrders = require("./Admin/orders");
+const AdminClients = require("./Admin/clients");
 const ProducerRouter = require("./Admin/producers");
 const AdminProducts = require("./Admin/products");
 const ColorRouter = require("./Admin/colors");
@@ -19,6 +20,7 @@ function route(app) {
   app.use("/", AdminStatistical);
   app.use("/", AdminOrders);
   app.use("/", AdminProducts);
+  app.use("/", AdminClients);
   app.use("/", ProducerRouter);
   app.use("/", AuthsRouter);
   app.use("/", ColorRouter);
