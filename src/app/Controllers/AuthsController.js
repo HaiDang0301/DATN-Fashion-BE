@@ -19,10 +19,17 @@ class AccountsController {
   }
   async register(req, res, next) {
     let image = [];
+    const password = req.body.password;
+    if (!password) {
+      res.status(422).json("Please provide password");
+    }
     try {
       const email = req.body.email;
       const token = jwt.sign({ email: email }, process.env.TOKEN_SECRET);
-      const findEmail = await Accounts.findOne({ email: email });
+      const findEmail = await Accounts.findOne({
+        email: email,
+        authType: "local",
+      });
       if (findEmail) {
         res.status(409).json("The account has been registered");
       } else {
@@ -58,6 +65,7 @@ class AccountsController {
               full_name: req.body.full_name,
               email: req.body.email,
               password: hashedPw,
+              authType: "local",
               verify: false,
             });
             await account.save();
@@ -89,7 +97,7 @@ class AccountsController {
     try {
       const findEmail = await Accounts.findOne({ email: email });
       if (findEmail) {
-        await Accounts.findOneAndUpdate({ email: email }, { registered: true });
+        await Accounts.updateMany({ email: email }, { registered: true });
         res.status(200).json("Subscribe newsletter");
       }
       if (!findEmail) {
@@ -109,7 +117,12 @@ class AccountsController {
       if (!password) {
         return res.status(401).json("Wrong account or password information");
       }
-      if (email && password && email.verify === true) {
+      if (
+        email &&
+        password &&
+        email.verify === true &&
+        email.authType === "local"
+      ) {
         const token = await jwt.sign(
           {
             id: email._id,
@@ -119,7 +132,7 @@ class AccountsController {
           { expiresIn: "15d" }
         );
         const { password, ...others } = email._doc;
-        const last_time_login = await Accounts.updateOne(
+        await Accounts.updateOne(
           { email: req.body.email },
           { last_time_login: Date.now() }
         );
@@ -130,6 +143,68 @@ class AccountsController {
       }
     } catch (error) {
       res.status(500).send("Connect server false");
+    }
+  }
+  async authGoogle(req, res, next) {
+    try {
+      const user = await Accounts.findOne({
+        authGoogleID: req.body.authGoogleID,
+        authType: "google",
+      });
+      if (user) {
+        const token = jwt.sign(
+          {
+            id: user._id,
+            role: user.role,
+          },
+          process.env.TOKEN_SECRET,
+          { expiresIn: "15d" }
+        );
+        await Accounts.updateOne(
+          { _id: user._id },
+          { last_time_login: Date.now() }
+        );
+        return res.status(200).json(token);
+      } else {
+        const newUser = new Accounts({
+          authType: "google",
+          authGoogleID: req.body.authGoogleID,
+          email: req.body.email,
+          full_name: req.body.full_name,
+          image: { url: req.body.url },
+          verify: true,
+        });
+        await newUser.save();
+        const token = jwt.sign(
+          {
+            id: newUser._id,
+            role: newUser.role,
+          },
+          process.env.TOKEN_SECRET,
+          { expiresIn: "15d" }
+        );
+        return res.status(200).json(token);
+      }
+    } catch (error) {
+      res.status(500).json("Connect Server False");
+    }
+  }
+  async authFaceBook(req, res, next) {
+    const id = req.user._id;
+    const role = req.user.role;
+    try {
+      const token = await jwt.sign(
+        {
+          id: id,
+          role: role,
+        },
+        process.env.TOKEN_SECRET,
+        { expiresIn: "15d" }
+      );
+      await Accounts.updateOne({ _id: id }, { last_time_login: Date.now() });
+      return res.status(200).json(token);
+    } catch (error) {
+      res.status(500).json("Connect Server False");
     }
   }
   async forget(req, res, next) {
@@ -215,17 +290,29 @@ class AccountsController {
     try {
       if (fileUpload) {
         let file = {};
-        const findUser = await Accounts.findOne({ _id: id });
-        await cloudinary.uploader.destroy(findUser.image.public_id);
-        const result = await cloudinary.uploader.upload(
-          fileUpload.image.tempFilePath,
-          { folder: "avatar/user" }
-        );
-        file = { url: result.url, public_id: result.public_id };
-        profile = {
-          ...profile,
-          image: file,
-        };
+        const findUser = await Accounts.findOne({ _id: id, authType: "local" });
+        if (findUser) {
+          await cloudinary.uploader.destroy(findUser.image.public_id);
+          const result = await cloudinary.uploader.upload(
+            fileUpload.image.tempFilePath,
+            { folder: "avatar/user" }
+          );
+          file = { url: result.url, public_id: result.public_id };
+          profile = {
+            ...profile,
+            image: file,
+          };
+        } else {
+          const result = await cloudinary.uploader.upload(
+            fileUpload.image.tempFilePath,
+            { folder: "avatar/user" }
+          );
+          file = { url: result.url, public_id: result.public_id };
+          profile = {
+            ...profile,
+            image: file,
+          };
+        }
       }
       if (password) {
         const salt = await bcrypt.genSalt(10);

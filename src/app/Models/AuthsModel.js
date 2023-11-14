@@ -7,8 +7,8 @@ const Account = new Schema(
       public_id: { type: String },
     },
     full_name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    email: { type: String, required: true },
+    password: { type: String },
     carts: [
       {
         product_id: { type: String, require: true },
@@ -25,6 +25,19 @@ const Account = new Schema(
       district: { type: String },
       ward: { type: String },
       address_home: { type: String },
+    },
+    authFacebookID: {
+      type: String,
+      default: null,
+    },
+    authGoogleID: {
+      type: String,
+      default: null,
+    },
+    authType: {
+      type: String,
+      enum: ["local", "facebook", "google"],
+      default: "local",
     },
     last_purchase: { type: Date },
     registered: { type: Boolean, default: false },
