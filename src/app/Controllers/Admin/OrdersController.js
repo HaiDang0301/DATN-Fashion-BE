@@ -80,13 +80,12 @@ class OrdersController {
     switch (status) {
       case status:
         if (status === "delivery") {
-          order = { status_delivery: "Delivery", status_payment: false };
+          order = { status_delivery: "Delivery" };
         }
         if (status === "cancel") {
           order = {
             status_delivery: "Cancel",
             reason_cancel: reason,
-            status_payment: false,
           };
         }
         if (status === "success") {

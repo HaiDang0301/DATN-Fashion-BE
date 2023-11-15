@@ -93,7 +93,6 @@ class CartsController {
   async orders(req, res, next) {
     const id = req.user.id;
     const full_name = req.body.full_name;
-    const email = req.body.email;
     const phone = req.body.phone;
     const address = req.body.address;
     const carts = req.body.carts;
@@ -103,7 +102,7 @@ class CartsController {
       .slice(2, 8)
       .toLocaleUpperCase();
     try {
-      if (!full_name || !email || !phone || carts.length === 0) {
+      if (!full_name || !phone || carts.length === 0) {
         res.status(403).json("Please provide full information");
       } else {
         const orders = new Orders({
@@ -114,6 +113,7 @@ class CartsController {
           orders: carts,
           totalMoney: totalMoney,
           address: address,
+          typePayment: "offline",
         });
         await orders.save();
         await Accounts.findOneAndUpdate(
@@ -129,7 +129,46 @@ class CartsController {
           );
       }
     } catch (error) {
-      console.log(error);
+      res.status(500).json("Connect Server False");
+    }
+  }
+  async payment(req, res, next) {
+    const id = req.user.id;
+    const full_name = req.body.full_name;
+    const phone = req.body.phone;
+    const address = req.body.address;
+    const carts = req.body.carts;
+    const typePayment = req.body.typePayment;
+    const totalMoney = Number(req.body.totalMoney).valueOf();
+    let randomCode = (Math.random() + 1)
+      .toString(36)
+      .slice(2, 8)
+      .toLocaleUpperCase();
+    try {
+      const orders = new Orders({
+        orders_code: randomCode,
+        user_id: id,
+        phone: phone,
+        full_name: full_name,
+        orders: carts,
+        totalMoney: totalMoney,
+        address: address,
+        typePayment: typePayment,
+        status_payment: true,
+      });
+      await orders.save();
+      await Accounts.findOneAndUpdate(
+        {
+          _id: id,
+        },
+        { carts: [] }
+      );
+      res
+        .status(200)
+        .json(
+          "Successful order, please wait for the admin to confirm your order"
+        );
+    } catch (error) {
       res.status(500).json("Connect Server False");
     }
   }

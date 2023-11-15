@@ -26,6 +26,11 @@ const Orders = new Schema(
     },
     status_delivery: { type: String, default: "Pending" },
     status_payment: { type: Boolean, default: false },
+    typePayment: {
+      type: String,
+      enum: ["online", "offline"],
+      default: "offline",
+    },
     reason_cancel: { type: String },
   },
   { timestamps: true }
