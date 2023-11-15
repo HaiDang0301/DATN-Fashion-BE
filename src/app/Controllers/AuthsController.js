@@ -109,7 +109,10 @@ class AccountsController {
   }
   async login(req, res, next) {
     try {
-      const email = await Accounts.findOne({ email: req.body.email });
+      const email = await Accounts.findOne({
+        email: req.body.email,
+        authType: "local",
+      });
       if (!email) {
         return res.status(401).json("Wrong account or password information");
       }
@@ -117,12 +120,7 @@ class AccountsController {
       if (!password) {
         return res.status(401).json("Wrong account or password information");
       }
-      if (
-        email &&
-        password &&
-        email.verify === true &&
-        email.authType === "local"
-      ) {
+      if (email && password && email.verify === true) {
         const token = await jwt.sign(
           {
             id: email._id,
